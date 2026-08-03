@@ -1,0 +1,19 @@
+.github/workflows/validate.yml
+  s_00674308787e9a::t_d672c35e270e67 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "f00023f1652e0264ec65b473f8b4e75058afdc69",
+  "prompts": {},
+  "sessions": {
+    "s_00674308787e9a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc68b-66ca-7b61-87f4-1d0a34ed1d0b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
