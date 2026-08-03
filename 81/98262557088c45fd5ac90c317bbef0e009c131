@@ -1,0 +1,19 @@
+.codex-plugin/plugin.json
+  s_4cebbe5743659f::t_b263c7bd766f1f 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "8198262557088c45fd5ac90c317bbef0e009c131",
+  "prompts": {},
+  "sessions": {
+    "s_4cebbe5743659f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc6d3-15e6-7ee2-9b93-87a1eb2dffe6",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
