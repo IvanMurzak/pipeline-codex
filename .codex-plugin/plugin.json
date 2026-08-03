@@ -9,8 +9,10 @@
   "interface": {
     "displayName": "Pipeline",
     "shortDescription": "Design and run durable AI pipelines.",
+    "longDescription": "A Codex workflow for designing and advancing deterministic, file-based AI pipelines.",
     "developerName": "IvanMurzak",
     "category": "Productivity",
-    "capabilities": ["Read", "Write"]
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": ["Use Pipeline to inspect this repository and identify the next safe pipeline step."]
   }
 }
