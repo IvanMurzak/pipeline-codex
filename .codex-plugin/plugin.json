@@ -1,6 +1,6 @@
 {
   "name": "pipeline",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Plan and run deterministic, file-based AI pipelines from Codex.",
   "author": { "name": "IvanMurzak" },
   "repository": "https://github.com/IvanMurzak/pipeline-codex",
