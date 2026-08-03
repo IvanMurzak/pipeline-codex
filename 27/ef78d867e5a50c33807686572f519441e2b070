@@ -1,0 +1,23 @@
+.codex-plugin/plugin.json
+  s_00674308787e9a::t_0788b25c29f9fd 1-16
+README.md
+  s_00674308787e9a::t_0788b25c29f9fd 1-5
+skills/pipeline/SKILL.md
+  s_00674308787e9a::t_0788b25c29f9fd 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "27ef78d867e5a50c33807686572f519441e2b070",
+  "prompts": {},
+  "sessions": {
+    "s_00674308787e9a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc68b-66ca-7b61-87f4-1d0a34ed1d0b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
