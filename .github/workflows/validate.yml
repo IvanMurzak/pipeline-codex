@@ -1,0 +1,25 @@
+name: Validate plugin
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate manifest and skill layout
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('.codex-plugin/plugin.json').read_text())
+          for key in ('name', 'version', 'description', 'skills', 'interface'):
+              assert manifest.get(key), f'missing {key}'
+          interface = manifest['interface']
+          for key in ('displayName', 'shortDescription', 'longDescription', 'defaultPrompt'):
+              assert interface.get(key), f'missing interface.{key}'
+          skill_root = Path(manifest['skills'])
+          assert skill_root.is_dir() and list(skill_root.glob('*/SKILL.md')), 'no skills found'
+          PY
