@@ -1,0 +1,19 @@
+.codex-plugin/plugin.json
+  s_00674308787e9a::t_4090a35f020911 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "dc711ba5a670eafdc92c96203d4e859e0da41b93",
+  "prompts": {},
+  "sessions": {
+    "s_00674308787e9a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc68b-66ca-7b61-87f4-1d0a34ed1d0b",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
