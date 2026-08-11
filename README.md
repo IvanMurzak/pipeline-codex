@@ -16,8 +16,22 @@ Two commands. The second one from the project where you want pipelines to live.
 
 ## Install
 
+**1. The plugin**, so Codex knows how to read and advance a pipeline:
+
+```bash
+codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
+codex plugin install pipeline@pipeline
+```
+
+**2. The CLI**, which is what actually decides what runs next:
+
 ```bash
 bun add -g @baizor/pipeline
+```
+
+**3. Set up the project**, from wherever you want pipelines to live:
+
+```bash
 pipeline init --local
 ```
 
@@ -25,12 +39,6 @@ pipeline init --local
 
 `pipeline init` clones a starter pipeline into `./.pipeline/support-answer`,
 serves a local dashboard, and leaves you with something you can run immediately.
-Then add the Codex plugin so Codex knows how to read and advance those files:
-
-```bash
-codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
-codex plugin install pipeline@pipeline
-```
 
 > The marketplace id is `pipeline`; it also carries
 > [`taskflow`](https://github.com/IvanMurzak/taskflow-codex), which installs as
