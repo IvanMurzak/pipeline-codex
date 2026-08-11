@@ -27,11 +27,12 @@ Then add the Codex plugin so Codex knows how to read and advance those files:
 
 ```bash
 codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
-codex plugin install pipeline@pipeline-codex
+codex plugin install pipeline@pipeline
 ```
 
-> The marketplace is called `pipeline-codex` because one marketplace carries both
-> of my Codex plugins — `pipeline` and [`taskflow`](https://github.com/IvanMurzak/taskflow-codex).
+> The marketplace id is `pipeline`; it also carries
+> [`taskflow`](https://github.com/IvanMurzak/taskflow-codex), which installs as
+> `taskflow@pipeline`.
 
 <details>
 <summary><b>Prerequisites, and connecting to the cloud instead of <code>--local</code></b></summary>
