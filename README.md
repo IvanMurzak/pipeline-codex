@@ -5,7 +5,7 @@
 [![CLI](https://img.shields.io/npm/v/%40baizor%2Fpipeline?style=for-the-badge&logo=npm&logoColor=white&label=CLI&labelColor=0D1117&color=CB3837)](https://www.npmjs.com/package/@baizor/pipeline)
 [![License](https://img.shields.io/badge/license-MIT-6E7681?style=for-the-badge&labelColor=0D1117)](LICENSE)
 
-![Two commands set Pipeline up and run your first pipeline end to end](docs/pipeline-terminal.svg)
+![A pipeline run walking its steps: plan, implement, test, changelog, open PR, merge](docs/pipeline-flow.svg)
 
 **Long AI work, as ordered files in your repo.** A pipeline is a folder of
 numbered markdown steps. A deterministic CLI decides what runs next — not the
@@ -20,6 +20,8 @@ Two commands. The second one from the project where you want pipelines to live.
 bun add -g @baizor/pipeline
 pipeline init --local
 ```
+
+![`pipeline init` signs in, connects the project, installs the plugin, clones a starter pipeline and runs it](docs/pipeline-terminal.svg)
 
 `pipeline init` clones a starter pipeline into `./.pipeline/support-answer`,
 serves a local dashboard, and leaves you with something you can run immediately.
