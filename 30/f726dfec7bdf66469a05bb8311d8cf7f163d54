@@ -1,0 +1,23 @@
+README.md
+  s_f25d47fcf17242::t_e59660ff0ad8e7 8,24-25
+docs/pipeline-dashboard.svg
+  s_f25d47fcf17242::t_738c75c6fedc21 1
+docs/pipeline-flow.svg
+  s_f25d47fcf17242::t_d690ea24217e68 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "30f726dfec7bdf66469a05bb8311d8cf7f163d54",
+  "prompts": {},
+  "sessions": {
+    "s_f25d47fcf17242": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_f25d47fcf17242",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
