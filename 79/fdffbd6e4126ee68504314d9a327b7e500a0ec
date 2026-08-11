@@ -1,0 +1,21 @@
+README.md
+  s_b325ffe7986e92::t_e6eb9fc072cd8e 30,33-35
+docs/pipeline-terminal.svg
+  s_b325ffe7986e92::t_52ca27e505d646 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "79fdffbd6e4126ee68504314d9a327b7e500a0ec",
+  "prompts": {},
+  "sessions": {
+    "s_b325ffe7986e92": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_b325ffe7986e92",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
