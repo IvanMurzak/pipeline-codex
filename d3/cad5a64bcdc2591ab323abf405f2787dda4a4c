@@ -1,0 +1,19 @@
+docs/pipeline-terminal.svg
+  s_0f5727c4b07e5b::t_26588156a760c7 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d3cad5a64bcdc2591ab323abf405f2787dda4a4c",
+  "prompts": {},
+  "sessions": {
+    "s_0f5727c4b07e5b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_0f5727c4b07e5b",
+        "model": "unknown"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
