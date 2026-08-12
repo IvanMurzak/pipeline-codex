@@ -32,16 +32,18 @@ choice, declared as the top-level `runner:` key in `pipeline.yml` (or the
 `runner:` frontmatter key in a v1 `PIPELINE.md`) — never inferred from chain
 length or guessed.
 
-There are exactly four mode names. Codex supports two of them today:
+There are exactly four mode names. Codex supports three of them today:
 
 | `runner:` | Codex support |
 | --- | --- |
 | `driver` | **Yes — and no plugin code is needed.** `pipeline drive …` is a self-contained headless loop with no model in the orchestration; a bare terminal runs it exactly as well as Codex does. Shell it out (or tell the user the command) when asked to run a pipeline this way. |
-| `session` | **Yes — this is what the rest of this skill implements.** The Codex session calls `pipeline next` itself, spawns a subagent per step, and drives the chain to completion. Follow [`references/session-loop.md`](references/session-loop.md) exactly — it has two preflight refusals and a rule about what you must never read, and both are load-bearing. |
-| `manager` (the **default** when `runner:` is absent) | **Not implemented by this plugin.** Say so plainly. Offer `session` if the user wants Codex to drive the run now, or `driver` for a headless run — never silently substitute one without saying which mode the manifest actually named. |
+| `session` | **Yes.** The Codex session calls `pipeline next` itself, spawns a subagent per step, and drives the chain to completion. Follow [`references/session-loop.md`](references/session-loop.md) exactly — it has two preflight refusals and a rule about what you must never read, and both are load-bearing. |
+| `manager` (the **default** when `runner:` is absent) | **Yes.** The session spawns one long-lived **manager** subagent — a *named* custom agent (`.codex/agents/pipeline-manager.toml`, written by this loop) — which runs the whole loop itself, spawning its own per-step subagent the same way. This exists so a long chain does not fill the window the user is watching. Follow [`references/manager-loop.md`](references/manager-loop.md) — it explains, with measured evidence, why model/effort pins go through named agent files rather than plain spawn arguments, which is load-bearing for honouring a manifest's per-step model pin. |
 | `standalone` | **Never, by design.** It means executing steps through a second provider's Agent SDK, which is an explicit non-goal for a Codex plugin. Point the user at the pipeline's own hosted/runner path instead of attempting it here. |
 
-If the manifest names `session`, or the user asks Codex to advance/run a
-pipeline directly and no other mode was requested, read
+If the manifest names `session`, read
 [`references/session-loop.md`](references/session-loop.md) before doing
-anything else — it is a procedure, not background reading.
+anything else — it is a procedure, not background reading. If it names
+`manager`, or names nothing at all (`manager` is the ecosystem default), read
+[`references/manager-loop.md`](references/manager-loop.md) instead, under the
+same rule.
