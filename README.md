@@ -90,6 +90,25 @@ record as much as a plan:
 - If the `pipeline` CLI isn't installed it says which runtime is missing and
   prepares the next step anyway — it never invents command output it did not get.
 
+## Which run modes it supports
+
+A pipeline declares how its run loop is driven with the `runner:` key in
+`pipeline.yml` (or v1 `PIPELINE.md` frontmatter). There are four mode names
+across the whole `pipeline` ecosystem, and this plugin does not pretend to
+cover all of them:
+
+| `runner:` | Here | [pipeline-claude](https://github.com/IvanMurzak/pipeline-claude) |
+|---|---|---|
+| `driver` — a headless loop with no model in the orchestration (`pipeline drive`) | ✅ works today; it's a CLI command, not plugin code | ✅ |
+| `session` — the coding session itself runs the loop and spawns one subagent per step | ✅ — the skill in this plugin | ✅ |
+| `manager` — a dedicated orchestrator subagent runs the loop (the **default** mode) | ❌ not implemented | ✅ |
+| `standalone` — steps run through the Agent SDK, no coding session required | ❌ never — that would mean a second provider's SDK | ✅ (Claude's own SDK) |
+
+If a pipeline you're advancing declares `manager`, or declares nothing at all
+(`manager` is the default across the ecosystem), Codex says so rather than
+silently running it under `session` instead — ask for `session` explicitly, or
+run it headless with `pipeline drive`.
+
 ## Watch it run, from anywhere
 
 ![The ai-pipeline.dev dashboard: stat tiles and a live run list](docs/pipeline-dashboard.svg)
