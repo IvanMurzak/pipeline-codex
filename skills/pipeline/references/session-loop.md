@@ -4,9 +4,9 @@ You reached this file from `SKILL.md`'s **Advancing (running) a pipeline**
 section because the pipeline's manifest declares `runner: session`, or because
 you were asked to advance/run a pipeline and no other mode applies. In this
 mode **your session** — not a separate orchestrator — calls `pipeline next`
-itself and spawns one subagent per action. There is no `pipeline-manager`
-equivalent in this plugin; `manager` is a different, unimplemented mode (see
-`SKILL.md`'s table).
+itself and spawns one subagent per action. `manager` is a different mode that
+pushes this same loop into a spawned subagent instead — see
+[`references/manager-loop.md`](manager-loop.md) and `SKILL.md`'s table.
 
 **`pipeline next` decides what runs next, in every mode — this holds exactly as
 hard here as anywhere else.** You ask, you dispatch, you record, you repeat.
@@ -24,12 +24,11 @@ not oversell the mode.
 - **The cost is your context, and the user's.** Every action plus every
   subagent report lands in the one window the user is watching. A long chain
   will fill it.
-- **There is no `manager` fallback here today.** In the Claude plugin this mode
-  trades context for `manager`, which absorbs the loop into a subagent and
-  keeps the main session clean. This plugin does not implement `manager` (see
-  `SKILL.md`), so for a genuinely long chain the honest alternative is
-  `driver` — `pipeline drive …`, which runs with no model in the loop at all —
-  not "run it here and hope the context holds."
+- **For a genuinely long chain, prefer `manager` instead.** It trades a second
+  model layer for keeping this session's own window clean — see
+  [`references/manager-loop.md`](manager-loop.md). `driver` (`pipeline
+  drive …`, no model in the loop at all) is the alternative when neither
+  session's context should carry the loop.
 - **`execution: parallel` is not supported here.** Preflight refuses it below.
 - What you gain: fewest moving parts, and the user watches every step happen
   in front of them.

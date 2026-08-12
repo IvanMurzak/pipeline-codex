@@ -101,13 +101,20 @@ cover all of them:
 |---|---|---|
 | `driver` — a headless loop with no model in the orchestration (`pipeline drive`) | ✅ works today; it's a CLI command, not plugin code | ✅ |
 | `session` — the coding session itself runs the loop and spawns one subagent per step | ✅ — the skill in this plugin | ✅ |
-| `manager` — a dedicated orchestrator subagent runs the loop (the **default** mode) | ❌ not implemented | ✅ |
+| `manager` — a dedicated orchestrator subagent runs the loop (the **default** mode) | ✅ — the session spawns one manager subagent, which spawns its own step subagents | ✅ |
 | `standalone` — steps run through the Agent SDK, no coding session required | ❌ never — that would mean a second provider's SDK | ✅ (Claude's own SDK) |
 
-If a pipeline you're advancing declares `manager`, or declares nothing at all
-(`manager` is the default across the ecosystem), Codex says so rather than
-silently running it under `session` instead — ask for `session` explicitly, or
-run it headless with `pipeline drive`.
+**How `manager` pins a model here.** Codex's subagent tool does not reliably
+accept an ad hoc "spawn with a different model" argument, but it *does*
+reliably honour the `model` / `model_reasoning_effort` of a **named**
+`.codex/agents/*.toml` custom agent — including a model genuinely different
+from the spawning agent's own, and one level of nesting deep. So this plugin's
+manager loop writes a small agent file for the persona it is about to spawn
+immediately before spawning it (one for the manager itself, one for the
+current step, rewritten fresh each time), and spawns by name rather than by
+passing a model override at call time. See
+[`skills/pipeline/references/manager-loop.md`](skills/pipeline/references/manager-loop.md)
+for the measurements behind that choice.
 
 ## Watch it run, from anywhere
 
