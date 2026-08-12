@@ -1,6 +1,6 @@
 {
   "name": "pipeline",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Plan and run deterministic, file-based AI pipelines from Codex.",
   "author": { "name": "IvanMurzak" },
   "repository": "https://github.com/IvanMurzak/pipeline-codex",
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Pipeline",
     "shortDescription": "Design and run durable AI pipelines.",
-    "longDescription": "A Codex workflow for designing and advancing deterministic, file-based AI pipelines.",
+    "longDescription": "A Codex workflow for designing, advancing, and driving deterministic, file-based AI pipelines to completion in session mode.",
     "developerName": "IvanMurzak",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],
