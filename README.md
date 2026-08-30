@@ -20,7 +20,7 @@ Two commands. The second one from the project where you want pipelines to live.
 
 ```bash
 codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
-codex plugin install pipeline@pipeline
+codex plugin add pipeline@pipeline
 ```
 
 **2. The CLI**, which is what actually decides what runs next:
