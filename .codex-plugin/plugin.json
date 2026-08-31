@@ -1,8 +1,10 @@
 {
   "name": "pipeline",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Plan and run deterministic, file-based AI pipelines from Codex.",
-  "author": { "name": "IvanMurzak" },
+  "author": {
+    "name": "IvanMurzak"
+  },
   "repository": "https://github.com/IvanMurzak/pipeline-codex",
   "license": "MIT",
   "skills": "./skills/",
@@ -12,7 +14,37 @@
     "longDescription": "A Codex workflow for designing, advancing, and driving deterministic, file-based AI pipelines to completion in session mode.",
     "developerName": "IvanMurzak",
     "category": "Productivity",
-    "capabilities": ["Read", "Write"],
-    "defaultPrompt": ["Use Pipeline to inspect this repository and identify the next safe pipeline step."]
-  }
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use Pipeline to inspect this repository and identify the next safe pipeline step."
+    ]
+  },
+  "agents": [
+    "./agents/pipeline-disambiguator.toml",
+    "./agents/pipeline-improver.toml",
+    "./agents/pipeline-manager.toml",
+    "./agents/pipeline-script-creator.toml",
+    "./agents/step-executor.toml"
+  ],
+  "mcpServers": {
+    "ai-pipeline-departments": {
+      "type": "http",
+      "url": "https://api.ai-pipeline.dev/mcp",
+      "timeout": 120000
+    }
+  },
+  "keywords": [
+    "pipeline",
+    "workflow",
+    "orchestration",
+    "agent",
+    "long-chain",
+    "iterations",
+    "fresh-context",
+    "mcp",
+    "departments"
+  ]
 }
