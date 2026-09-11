@@ -16,7 +16,7 @@ Two commands. The second one from the project where you want pipelines to live.
 
 ## Install
 
-**1. The plugin**, so Codex CLI has the `/pipeline:*` commands:
+**1. The plugin**, so Codex CLI has the `$/pipeline:*` commands:
 
 ```bash
 codex plugin marketplace add IvanMurzak/pipeline-claude-marketplace
@@ -132,8 +132,8 @@ plugin arrive via `/plugin update`; the CLI updates on its own npm version line.
 ## Your first pipeline
 
 ```text
-/pipeline:clone support-answer
-/pipeline:run ./.pipeline/support-answer
+$pipeline:clone support-answer
+$pipeline:run ./.pipeline/support-answer
 ```
 
 `run` takes the pipeline **directory** — the manifest decides which step is
@@ -143,13 +143,13 @@ back up, or `--start <step-name>` to enter partway in.
 Or describe what you want and let it author one:
 
 ```text
-/pipeline:design a release pipeline — changelog, version bump, tag, GitHub release
+$pipeline:design a release pipeline — changelog, version bump, tag, GitHub release
 ```
 
 Then, from any later task, stop choosing pipelines by hand:
 
 ```text
-/pipeline:dispatch fix the flaky auth test in the checkout suite
+$pipeline:dispatch fix the flaky auth test in the checkout suite
 ```
 
 `dispatch` matches your task against every pipeline manifest in the project with
@@ -195,11 +195,11 @@ and the Codex build of this plugin in [`IvanMurzak/pipeline-codex`](https://gith
 
 | Command | What it does |
 |---|---|
-| `/pipeline:clone <template>` | Scaffolds a ready-made pipeline into `./.pipeline/<template>/`. `--list` shows them: `support-answer`, `ship-feature`, `example-minimal`. `--force` overwrites, `--dir` picks another project root. |
-| `/pipeline:design <goal>` | Authors a new pipeline from a high-level goal — a `pipeline.yml` plus the markdown its steps read. Each step is one PR-sized unit of work. |
-| `/pipeline:run <pipeline>` | Drives a pipeline end to end. Fresh context per step, resumable, liveness-tracked. |
-| `/pipeline:dispatch <task>` | Picks the right pipeline for a task and runs it without asking. |
-| `/pipeline:find <task>` | The same matcher with no model and no auto-run: ranked candidates, scores, matched terms, and every exclusion with its reason. Takes a GitHub issue URL, `owner/repo#N`, or a bare issue number. |
+| `$pipeline:clone <template>` | Scaffolds a ready-made pipeline into `./.pipeline/<template>/`. `--list` shows them: `support-answer`, `ship-feature`, `example-minimal`. `--force` overwrites, `--dir` picks another project root. |
+| `$pipeline:design <goal>` | Authors a new pipeline from a high-level goal — a `pipeline.yml` plus the markdown its steps read. Each step is one PR-sized unit of work. |
+| `$pipeline:run <pipeline>` | Drives a pipeline end to end. Fresh context per step, resumable, liveness-tracked. |
+| `$pipeline:dispatch <task>` | Picks the right pipeline for a task and runs it without asking. |
+| `$pipeline:find <task>` | The same matcher with no model and no auto-run: ranked candidates, scores, matched terms, and every exclusion with its reason. Takes a GitHub issue URL, `owner/repo#N`, or a bare issue number. |
 
 **Five subagents**, normally reached through those chains rather than by hand.
 
@@ -224,7 +224,7 @@ looks the way it does.
 
 | Rule | In practice |
 |---|---|
-| **Skills read only their own role's input** | `/pipeline:run` is a router and never opens a step body. `/pipeline:design` reads the project only while authoring. `/pipeline:dispatch` reads manifests, capped at 300 tokens each, because matching needs them. |
+| **Skills read only their own role's input** | `$/pipeline:run` is a router and never opens a step body. `$/pipeline:design` reads the project only while authoring. `$/pipeline:dispatch` reads manifests, capped at 300 tokens each, because matching needs them. |
 | **Steps get leaner over time** | Long deterministic blocks — build sequences, filesystem work, multi-call API chains — become scripts under `scripts/`, replaced by a one-line invocation. The executor reads one line; the logic runs in Bash, never through the model. |
 | **The manifest is metadata, not a step** | Capped at 300 tokens, never auto-loaded, opt-in per step via an explicit `Context` reference. Adding a pipeline does not raise anyone else's baseline cost. |
 
@@ -329,7 +329,7 @@ all. Don't read `driver` (the mode) and `pipeline drive` (the command) as
 interchangeable — one names a concept, the other names how you invoke it.
 
 **What ships in this plugin today:** `session` and `manager` run through
-`/pipeline:run`; `driver` runs through `pipeline drive`, which v1 pipelines
+`$/pipeline:run`; `driver` runs through `pipeline drive`, which v1 pipelines
 select via the `PIPELINE.md` field `runner: headless` (`driver`'s v1 spelling —
 a rename with a read-time shim, so nothing that already sets it changes
 behavior). `standalone` and a `pipeline.yml`-level `runner:` key belong to this
@@ -344,12 +344,12 @@ This section is the practical walkthrough — install once, then a small set of 
 
 | You want to… | Use | Asks before running? | Cost |
 |---|---|---|---|
-| Author a new repeatable workflow | `/pipeline:design <goal>` | n/a (writes files) | one-time design cost |
-| Pick a pipeline for a task and **see** the match before running | `/pipeline:find <task or GH issue URL>` | yes | ~zero LLM tokens |
-| Pick a pipeline for a task and **just run it** | `/pipeline:dispatch <task>` | no | ~zero for ~80% of tasks; cheap Haiku for ambiguous; full only for chains |
-| Run / resume a specific pipeline you already know the path of | `/pipeline:run <abs-path-to-pipeline-folder>` | no | n/a |
+| Author a new repeatable workflow | `$pipeline:design <goal>` | n/a (writes files) | one-time design cost |
+| Pick a pipeline for a task and **see** the match before running | `$pipeline:find <task or GH issue URL>` | yes | ~zero LLM tokens |
+| Pick a pipeline for a task and **just run it** | `$pipeline:dispatch <task>` | no | ~zero for ~80% of tasks; cheap Haiku for ambiguous; full only for chains |
+| Run / resume a specific pipeline you already know the path of | `$pipeline:run <abs-path-to-pipeline-folder>` | no | n/a |
 
-`/pipeline:design` is the only skill that **writes** files (your new pipeline). The matching skills (`find`, `dispatch`) are read-only inspections of `PIPELINE.md` manifests; the run skills (`run`, `dispatch`) execute pipelines that do whatever those pipelines say in their iteration `Steps`.
+`$pipeline:design` is the only skill that **writes** files (your new pipeline). The matching skills (`find`, `dispatch`) are read-only inspections of `PIPELINE.md` manifests; the run skills (`run`, `dispatch`) execute pipelines that do whatever those pipelines say in their iteration `Steps`.
 
 ### Day 1 — author and run your first pipeline
 
@@ -358,30 +358,30 @@ This section is the practical walkthrough — install once, then a small set of 
 2. **Design the pipeline.** From the project root:
 
    ```
-   /pipeline:design Cut a release of the API server: bump version, run tests, build image, deploy staging, smoke-test, deploy prod
+   $pipeline:design Cut a release of the API server: bump version, run tests, build image, deploy staging, smoke-test, deploy prod
    ```
 
-   The `/pipeline:design` skill will sketch the step list, confirm scope with you when non-trivial, then write the manifest and its step bodies under `./.pipeline/<pipeline-name>/` — a `PIPELINE.md` manifest plus an ordered `steps/01-*.md`, `steps/02-*.md`, …. Each iteration file is a self-contained PR-sized unit of work.
+   The `$pipeline:design` skill will sketch the step list, confirm scope with you when non-trivial, then write the manifest and its step bodies under `./.pipeline/<pipeline-name>/` — a `PIPELINE.md` manifest plus an ordered `steps/01-*.md`, `steps/02-*.md`, …. Each iteration file is a self-contained PR-sized unit of work.
 
 3. **Sanity-check the result.** Open the new folder yourself; read the manifest's `End State` and the first iteration's `Goal` / `Steps` / `Success Criteria`. The designer is good but not infallible — five minutes reading what it produced now saves ten minutes mid-execution. Edit by hand if needed; iteration files are just markdown.
 
 4. **Run it.** Two equivalent options:
 
    ```
-   /pipeline:run ./.pipeline/release-api
+   $pipeline:run ./.pipeline/release-api
    ```
 
    …or, more naturally, hand the matcher a task and let it find the right pipeline:
 
    ```
-   /pipeline:dispatch Cut a release of the API server with version 2.5.0
+   $pipeline:dispatch Cut a release of the API server with version 2.5.0
    ```
 
-   `/pipeline:run` supervises; it does not execute.
+   `$pipeline:run` supervises; it does not execute.
 
    | Depth | Who | Does |
    |---|---|---|
-   | 0 | `/pipeline:run` | Stays in your session. Owns liveness, the human-facing report, and the hours-long nested-blocker wait. |
+   | 0 | `$pipeline:run` | Stays in your session. Owns liveness, the human-facing report, and the hours-long nested-blocker wait. |
    | 1 | `pipeline-manager` | Drives the chain forward until the pipeline completes or halts. |
    | 2 | `step-executor` | One per step, each in a fresh context. |
 
@@ -393,10 +393,10 @@ This section is the practical walkthrough — install once, then a small set of 
 
 Once you have a few pipelines in `.pipeline/`, you stop typing pipeline paths and start typing tasks. Two skills, same matcher, different ergonomics:
 
-**Inspection — `/pipeline:find`.** Use when you want to see the match before committing.
+**Inspection — `$pipeline:find`.** Use when you want to see the match before committing.
 
 ```
-/pipeline:find Reduce p99 latency on the /api/users endpoint by adding indexes
+$pipeline:find Reduce p99 latency on the /api/users endpoint by adding indexes
 ```
 
 Output looks like:
@@ -417,13 +417,13 @@ Run "optimize-db" now? [Y/n]
 
 The "Excluded by Scope.Out" list shows pipelines the matcher rejected and **why**. That visibility is the whole point of the inspection variant — when the matcher excludes a pipeline you expected to win, the explanation tells you whether to fix the task wording, raise `--neg-threshold`, or edit the rejecting pipeline's `Scope.Out` bullet to be more specific.
 
-**Autonomous run — `/pipeline:dispatch`.** Use when you trust the matcher.
+**Autonomous run — `$pipeline:dispatch`.** Use when you trust the matcher.
 
 ```
-/pipeline:dispatch Cut a release of the API server with version 2.5.0
+$pipeline:dispatch Cut a release of the API server with version 2.5.0
 ```
 
-Same first-tier match as `/pipeline:find` — stdlib BM25 plus a `Scope.Out`
+Same first-tier match as `$pipeline:find` — stdlib BM25 plus a `Scope.Out`
 hard-filter — then it escalates only as far as it has to:
 
 | Outcome | What happens | Cost |
@@ -435,19 +435,19 @@ hard-filter — then it escalates only as far as it has to:
 **Working from a GitHub issue.** Either skill accepts a URL or `owner/repo#NUMBER` instead of free-form text:
 
 ```
-/pipeline:find https://github.com/myorg/myrepo/issues/247
-/pipeline:dispatch myorg/myrepo#247
+$pipeline:find https://github.com/myorg/myrepo/issues/247
+$pipeline:dispatch myorg/myrepo#247
 ```
 
 The matcher calls `gh issue view --json title,body` and uses the issue's title+body as the task. Useful for triaging incoming issues without copy-pasting their text.
 
 ### Day-2 — when nothing matches
 
-If `/pipeline:find` returns no candidates and the excluded list doesn't reveal an obvious cause:
+If `$pipeline:find` returns no candidates and the excluded list doesn't reveal an obvious cause:
 
 1. **Re-read your task wording.** Pipelines match on terminology that appears in `End State` / `Scope.In` / pipeline name. If you describe a "schema migration" but the relevant pipeline calls it "database evolution", your wording and the matcher's vocabulary don't overlap.
 2. **Try `--neg-threshold 2`** (you can pass `--` flags after the task in the command if you need to). Default is 1, which is strict. Raising it to 2 means "only exclude if at least 2 task tokens overlap with `Scope.Out`."
-3. **Author a new pipeline** with `/pipeline:design <goal>` if no existing pipeline really covers the task and the workflow will repeat.
+3. **Author a new pipeline** with `$pipeline:design <goal>` if no existing pipeline really covers the task and the workflow will repeat.
 4. **Fall back to a regular agent** (`Agent({subagent_type: "general-purpose", …})` or a domain-specific teammate) for genuinely one-shot work — pipelines are for *repeatable* workflows.
 
 ### Day-N — letting pipelines improve themselves
@@ -471,20 +471,20 @@ environment issues, general friction — are surfaced to **you** in the final
 report instead of being silently absorbed. The feedback folder is cleaned up
 afterwards; improvements live in the docs, project problems live in the report.
 
-You don't trigger any of this. It happens during normal `/pipeline:run` invocations. Over a few weeks of use, your pipelines drift toward "iterations contain only the parts that need agent judgment; everything else is in scripts" — which is the cheap-tokens steady state.
+You don't trigger any of this. It happens during normal `$pipeline:run` invocations. Over a few weeks of use, your pipelines drift toward "iterations contain only the parts that need agent judgment; everything else is in scripts" — which is the cheap-tokens steady state.
 
 See "Self-improving pipelines" and "Token-cheap iterations via script extraction" sections below for the full mechanics.
 
 ### Common pitfalls
 
-- **Running from the wrong directory.** Pipelines live in your **consumer project's** `./.pipeline/`, not in the plugin install folder. If `/pipeline:design` ends up writing somewhere unexpected, your CWD wasn't the project root. The plugin install dir (`${CODEX_PLUGIN_ROOT}`) is read-only at runtime; nothing should ever land there.
-- **Designing one-shot pipelines.** Both `/pipeline:design` and the `/pipeline:design` skill agent will push back when your goal looks like a single-use task. Take the pushback — pipelines pollute `.pipeline/` if used for one-shot work, since that folder doubles as a knowledge base of your project's *recurring* processes.
-- **Editing iteration files mid-chain.** If a pipeline is currently running (executor in flight), don't edit its iteration files by hand. Wait for the chain to halt or complete; then edit, then resume with `/pipeline:run <halted-iteration.md>`. Iterations are designed to be idempotent, so re-running from the halted step is safe.
-- **Confusing the dispatch-tier-3 fallback for normal behavior.** If you find yourself paying full LLM cost on every `/pipeline:dispatch` call, your matcher is returning zero candidates because of vocabulary mismatch (your tasks don't share terms with manifest `Scope.In` / `End State`). Fix the manifests' wording or your task wording; don't accept tier 3 as the steady state.
+- **Running from the wrong directory.** Pipelines live in your **consumer project's** `./.pipeline/`, not in the plugin install folder. If `$pipeline:design` ends up writing somewhere unexpected, your CWD wasn't the project root. The plugin install dir (`${CODEX_PLUGIN_ROOT}`) is read-only at runtime; nothing should ever land there.
+- **Designing one-shot pipelines.** Both `$pipeline:design` and the `$pipeline:design` skill agent will push back when your goal looks like a single-use task. Take the pushback — pipelines pollute `.pipeline/` if used for one-shot work, since that folder doubles as a knowledge base of your project's *recurring* processes.
+- **Editing iteration files mid-chain.** If a pipeline is currently running (executor in flight), don't edit its iteration files by hand. Wait for the chain to halt or complete; then edit, then resume with `$pipeline:run <halted-iteration.md>`. Iterations are designed to be idempotent, so re-running from the halted step is safe.
+- **Confusing the dispatch-tier-3 fallback for normal behavior.** If you find yourself paying full LLM cost on every `$pipeline:dispatch` call, your matcher is returning zero candidates because of vocabulary mismatch (your tasks don't share terms with manifest `Scope.In` / `End State`). Fix the manifests' wording or your task wording; don't accept tier 3 as the steady state.
 
 ## Iteration file shape
 
-Every iteration file contains these sections (and the `/pipeline:design` skill agent enforces them):
+Every iteration file contains these sections (and the `$pipeline:design` skill agent enforces them):
 
 ```markdown
 # <Iteration Title>
@@ -518,8 +518,8 @@ One or two sentences.
 
 Two user-facing skills, **same matcher under the hood, different ergonomics on top**:
 
-- **`/pipeline:find <task-or-issue-url>`** — inspection variant. Deterministic-only (no LLM). Returns ranked candidates with score, matched terms, and excluded-with-reason output, then asks before running. Use when you want to see the match before committing.
-- **`/pipeline:dispatch <task>`** — autonomous variant. Same matcher in tier 1, plus an LLM tiebreaker on ambiguity (tier 2) and a chain-detection fallback on no match (tier 3). Auto-runs without confirmation. Use when you trust the matcher to decide.
+- **`$pipeline:find <task-or-issue-url>`** — inspection variant. Deterministic-only (no LLM). Returns ranked candidates with score, matched terms, and excluded-with-reason output, then asks before running. Use when you want to see the match before committing.
+- **`$pipeline:dispatch <task>`** — autonomous variant. Same matcher in tier 1, plus an LLM tiebreaker on ambiguity (tier 2) and a chain-detection fallback on no match (tier 3). Auto-runs without confirmation. Use when you trust the matcher to decide.
 
 Both share the `pipeline match` command — Okapi BM25 over a **positive corpus**
 (name, `End State`, `Scope.In`, `Glossary`), hard-filtered by a **negative
@@ -533,7 +533,7 @@ filtering the other is the structural fix. So a pipeline whose `Scope.Out` reads
 mentioning "database schema" — rather than ranked next to the pipeline you
 actually wanted.
 
-### `/pipeline:dispatch`'s three-tier cost ladder
+### `$pipeline:dispatch`'s three-tier cost ladder
 
 Each call walks down the ladder; it stops at the first tier that produces a usable answer.
 
@@ -559,11 +559,11 @@ Excluded by Scope.Out:
   - migrate-db: Scope.Out includes ["server release"]; matching terms: ["release", "server"]
   - audit-deps: Scope.Out includes ["server release"]; matching terms: ["release", "server"]
 
-Run "release-server" now? [Y/n]            # /pipeline:find — asks
-▶ Why: BM25 confident match (ratio 4.2)    # /pipeline:dispatch — auto-runs
+Run "release-server" now? [Y/n]            # $/pipeline:find — asks
+▶ Why: BM25 confident match (ratio 4.2)    # $/pipeline:dispatch — auto-runs
 ```
 
-For a GitHub issue, run either skill with the URL: `/pipeline:find https://github.com/owner/repo/issues/123`. The matcher calls `gh issue view --json title,body` and uses that as the task. Useful when triaging incoming issues.
+For a GitHub issue, run either skill with the URL: `$pipeline:find https://github.com/owner/repo/issues/123`. The matcher calls `gh issue view --json title,body` and uses that as the task. Useful when triaging incoming issues.
 
 The disambiguator lives in this plugin; the matcher runs as `pipeline match` in the **`@baizor/pipeline` CLI**, which you install once (`bun add -g @baizor/pipeline`) and which this plugin requires anyway — see [Install](#install). Nothing extra is installed *per consumer project*. (`gh` is needed only for the `--issue` form.)
 
@@ -705,7 +705,7 @@ pipeline ci-wait --json                   # no selector = the repo's default bra
 
 `--pr` accepts a number, URL, or head-branch name (via `gh pr checks`, covering Actions and third-party checks). `--branch`/`--sha` poll the commit check-runs API; a branch is resolved to its HEAD sha once at start, so a later push is a new gate rather than a moving target. Requires an authenticated `gh` CLI (`--repo <path>` selects which repo's remote to use; default: the current directory).
 
-## Measuring every run (`.pipeline/.stats/` + `/pipeline:optimize`)
+## Measuring every run (`.pipeline/.stats/` + `$/pipeline:optimize`)
 
 Every pipeline run is measured by **pure software — no AI agent, zero LLM tokens**. It is ON by
 default (`PIPELINE_STATS_ENABLED=0` disables). The `pipeline next` engine appends a timeline as the
@@ -739,7 +739,7 @@ View from the terminal any time with `pipeline stats [--project <path>] [--json]
 prints `SUMMARY.md`). Crashed/killed runs surface in SUMMARY under "in-flight or
 crashed" via their leftover timeline buffers.
 
-**Closing the loop — `/pipeline:optimize`.** A deliberately **user-invoked-only** skill
+**Closing the loop — `$/pipeline:optimize`.** A deliberately **user-invoked-only** skill
 (`disable-model-invocation: true`, so no agent can auto-trigger it and burn tokens): run it weekly
 (or whenever) and it reads `SUMMARY.md`, flags pipelines whose halts/duration/tokens regressed
 against their own history — and pipelines with recurring tool failures (same tool failing run
@@ -763,18 +763,18 @@ finite context.
 | Who | Does |
 |---|---|
 | `step-executor` *(subagent)* | Recognises the blocker and prepares a brief. Nothing else. |
-| `/pipeline:run` *(main session)* | Files the issue, spawns the child run, and does the waiting. |
+| `$/pipeline:run` *(main session)* | Files the issue, spawns the child run, and does the waiting. |
 
 1. The executor stabilizes the parent branch (commits what's done, or reverts the unfinished chunk so the branch is green) and picks the blocker's target repo and base branch.
 2. The executor emits a `blocker_delegation` brief in its final report with a full issue body, the child pipeline's first iteration path, a `partial_work_note` for resumption, and poll/deadline settings.
-3. The `pipeline-manager` relays the brief up to `/pipeline:run`, which files a
+3. The `pipeline-manager` relays the brief up to `$/pipeline:run`, which files a
    **new GitHub issue** on the blocker's target repo, posts a back-link on the
    parent's issue so the relationship is visible from both sides, and spawns a
    **child run** via the `Agent` tool. The child's worktree defaults to `main` of
    the target repo; the parent's branch is used as the base only when `main`
    lacks state that is strictly prerequisite to starting the fix.
-4. `/pipeline:run` **waits** — polling for the child PR to merge (default interval 5 minutes, default deadline 4 hours) — instead of advancing the chain.
-5. On merge, `/pipeline:run` fetches the blocker target's updated base, merges (or rebases) it into the parent's branch, re-runs the iteration's verification gate, and re-invokes the `pipeline-manager` to re-enter the original iteration with the `partial_work_note` embedded in the prompt.
+4. `$/pipeline:run` **waits** — polling for the child PR to merge (default interval 5 minutes, default deadline 4 hours) — instead of advancing the chain.
+5. On merge, `$/pipeline:run` fetches the blocker target's updated base, merges (or rebases) it into the parent's branch, re-runs the iteration's verification gate, and re-invokes the `pipeline-manager` to re-enter the original iteration with the `partial_work_note` embedded in the prompt.
 
 Closed without merging, merge conflicts, a red verification gate, or a hit
 deadline all **halt the chain for human review** rather than auto-retrying.
@@ -785,7 +785,7 @@ together:
 | Side | Covers | Lives in |
 |---|---|---|
 | Executor | in-scope vs tangent vs blocker heuristics, brief shape, executor invariants | `step-executor`'s prompt, "Nested-Blocker Delegation" |
-| Caller | issue creation, child spawn, poll-wait, merge, re-invocation | `/pipeline:run`'s skill, "Nested-Blocker Flow" |
+| Caller | issue creation, child spawn, poll-wait, merge, re-invocation | `$/pipeline:run`'s skill, "Nested-Blocker Flow" |
 
 If you edit one side, edit the other in lockstep.
 
@@ -925,7 +925,7 @@ Everything configurable, in one place. All fields are OPTIONAL — a pipeline wi
 |---|---|---|
 | `schema:` | `2` | Required, exact. A manifest that does not say which format it is written in is the ambiguity v2 removes. |
 | `name:` | — | Required. The pipeline's name. |
-| `description:` | — | One line — shown by `/pipeline:find`, and matched against your task. |
+| `description:` | — | One line — shown by `$/pipeline:find`, and matched against your task. |
 | `execution:` | `sequential` \| `parallel` | `parallel` dispatches each dependency layer at once. The graph itself is `needs:`; this decides only how much of it may run together. |
 | `isolation:` | `none` \| `step` \| `run` | The SCOPE of a git worktree: none, one per step (parallel layers, merged after), or one per run (consumer-provisioned, sequential-only). |
 | `defaults:` | — | `model:` / `effort:` inherited by every step that does not set its own. |
@@ -1018,8 +1018,8 @@ Runs are recorded as they happen in an append-only journal at
 `<project>/.pipeline/.runtime/events.jsonl`. There are two ways to watch one.
 
 **The hosted dashboard at [ai-pipeline.dev](https://ai-pipeline.dev)** is the UI.
-Run `pipeline cloud connect` once and every run — from `/pipeline:run`,
-`/pipeline:dispatch`, `pipeline drive`, or cloud dispatch — streams there: run
+Run `pipeline cloud connect` once and every run — from `$/pipeline:run`,
+`$/pipeline:dispatch`, `pipeline drive`, or cloud dispatch — streams there: run
 list, step tree, timings, token counts and cost, tool-call and failure counts,
 the parked-question surface, and per-run analytics. It is installable as a web
 app, so it works from a phone without exposing anything on your network. What it
@@ -1035,11 +1035,11 @@ transcript in the terminal, which is the post-mortem a `pipeline drive` run
 otherwise leaves scattered across files nobody opens.
 
 > **Historical note.** Earlier versions shipped a *local* browser dashboard
-> (`/pipeline:ui`, a background Bun daemon serving a React app). It was deleted:
+> (`$/pipeline:ui`, a background Bun daemon serving a React app). It was deleted:
 > the hosted dashboard is already better at the shared 90%, and the two local
 > capabilities without a cloud equivalent were moved into the CLI as
 > `pipeline logs --chat` and `pipeline fix` before it went. `pipeline ui`,
-> `/pipeline:ui`, the daemon and its `SessionStart` launcher no longer exist.
+> `$/pipeline:ui`, the daemon and its `SessionStart` launcher no longer exist.
 
 ### Terminal logs — `pipeline logs`
 
@@ -1089,7 +1089,7 @@ Two things it does *not* do:
   so Codex CLI still launches each hook's instantly-exiting process. To remove
   even that, disable the plugin.
 - **It does not silence `pipeline logs`.** The core run lifecycle is journalled
-  by `/pipeline:run` regardless, so the terminal view keeps working.
+  by `$/pipeline:run` regardless, so the terminal view keeps working.
 
 > Performance note: `SubagentStop` only fires the hook for the `pipeline-manager` subagent (via a `matcher`), so the dozens of other subagent stops in a run no longer spawn a hook process.
 
@@ -1119,12 +1119,12 @@ This switch is **orthogonal** to `PIPELINE_STATS_ENABLED` — the separate local
 
 The plugin also ships a `UserPromptSubmit` hook that surfaces a matching
 pipeline for whatever you just typed — deterministic auto-discovery with **zero
-always-loaded context**. It runs the same BM25 matcher as `/pipeline:find` and
-`/pipeline:dispatch` against your prompt.
+always-loaded context**. It runs the same BM25 matcher as `$/pipeline:find` and
+`$/pipeline:dispatch` against your prompt.
 
 It speaks **only on a confident single match** — exactly one candidate, or a top
-score at least 2× the runner-up, the same threshold `/pipeline:dispatch` uses —
-and then injects one line suggesting `/pipeline:run` or `/pipeline:dispatch`. On
+score at least 2× the runner-up, the same threshold `$/pipeline:dispatch` uses —
+and then injects one line suggesting `$/pipeline:run` or `$/pipeline:dispatch`. On
 no match or an ambiguous one it stays completely silent. It never blocks or
 modifies your prompt.
 
@@ -1162,7 +1162,7 @@ Everything the plugin reads from the environment, in one place. Set the per-proj
 
 **Hook contract (set BY the plugin, read by your hook scripts):** every `PIPELINE_WT_*` variable passed to the `worktree-create` / `worktree-finalize` / `worktree-destroy` hooks is specified in [`docs/worktree-hook-contract.md`](docs/worktree-hook-contract.md) — that contract is frozen; write hooks against it, never set those variables yourself.
 
-**Internal (do not set):** `PIPELINE_RUN_ID` / `PIPELINE_PARENT_RUN_ID` are run-correlation plumbing between `/pipeline:run` and the analytics hooks; setting them manually mis-attributes events. `PIPELINE_STATS_RUNNER` is set by `pipeline drive` to tag `driver` runs in the measurement files.
+**Internal (do not set):** `PIPELINE_RUN_ID` / `PIPELINE_PARENT_RUN_ID` are run-correlation plumbing between `$/pipeline:run` and the analytics hooks; setting them manually mis-attributes events. `PIPELINE_STATS_RUNNER` is set by `pipeline drive` to tag `driver` runs in the measurement files.
 
 ## Departments (`/mcp` + background notifier)
 
@@ -1278,13 +1278,13 @@ Opt out with `PIPELINE_DEPARTMENT_NOTIFY_ENABLED=0` (same falsy-value convention
 If an executor halts on a blocker, fix the underlying issue, then re-invoke:
 
 ```
-/pipeline:run <absolute-path>/.pipeline/<pipeline-name>/steps/<NN-halted-iteration>.md
+$/pipeline:run <absolute-path>/.pipeline/<pipeline-name>/steps/<NN-halted-iteration>.md
 ```
 
 Iterations are designed to be idempotent, so re-running from the halted step is safe.
 
 ## Tips
 
-- Start with a clear one-sentence end-state when calling `/pipeline:design`. Vague goals produce vague pipelines.
+- Start with a clear one-sentence end-state when calling `$/pipeline:design`. Vague goals produce vague pipelines.
 - Prefer flat linear chains. Nest only when an iteration is itself a mini-pipeline.
 - Pipelines double as a knowledge base: after completion, the folder documents *what was done and why* and can be read by humans or future agents.
