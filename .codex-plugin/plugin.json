@@ -22,13 +22,6 @@
       "Use Pipeline to inspect this repository and identify the next safe pipeline step."
     ]
   },
-  "agents": [
-    "./agents/pipeline-disambiguator.toml",
-    "./agents/pipeline-improver.toml",
-    "./agents/pipeline-manager.toml",
-    "./agents/pipeline-script-creator.toml",
-    "./agents/step-executor.toml"
-  ],
   "mcpServers": {
     "ai-pipeline-departments": {
       "type": "http",

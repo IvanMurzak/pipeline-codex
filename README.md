@@ -19,14 +19,14 @@ Two commands. The second one from the project where you want pipelines to live.
 **1. The plugin**, so Codex CLI has the `$/pipeline:*` commands:
 
 ```bash
-codex plugin marketplace add IvanMurzak/pipeline-claude-marketplace
-codex plugin install pipeline@pipeline
+codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
+codex plugin add pipeline@pipeline
 ```
 
 Already inside Codex CLI? The same two, as slash commands:
 
 ```text
-/plugin marketplace add IvanMurzak/pipeline-claude-marketplace
+/plugin marketplace add IvanMurzak/pipeline-codex-marketplace
 /plugin install pipeline@pipeline
 ```
 
@@ -740,7 +740,7 @@ prints `SUMMARY.md`). Crashed/killed runs surface in SUMMARY under "in-flight or
 crashed" via their leftover timeline buffers.
 
 **Closing the loop — `$/pipeline:optimize`.** A deliberately **user-invoked-only** skill
-(`disable-model-invocation: true`, so no agent can auto-trigger it and burn tokens): run it weekly
+(marked `USER-INVOKED ONLY` in its description so agents do not auto-trigger it): run it weekly
 (or whenever) and it reads `SUMMARY.md`, flags pipelines whose halts/duration/tokens regressed
 against their own history — and pipelines with recurring tool failures (same tool failing run
 after run) — digs into the relevant `runs/<id>.log` files only, and — with your approval —

@@ -2,7 +2,6 @@
 name: optimize
 description: USER-INVOKED ONLY (e.g. on a weekly schedule) — review the pipeline run measurements under .pipeline/.stats/ (durations, outcomes, tokens, tool failures), inspect run logs where something regressed or repeatedly failed, and apply targeted improvements to specific pipelines via pipeline-improver. Never auto-invoke this skill; it exists so measurement review costs zero tokens until the user explicitly asks for it.
 user-invocable: true
-disable-model-invocation: true
 allowed-tools: Read, Bash, Glob, Grep, Agent, AskUserQuestion
 argument-hint: "[pipeline-name … | leave empty to review everything]"
 ---
@@ -17,7 +16,7 @@ You are running the **periodic optimization pass** over the measurement files th
 ## Token discipline
 
 The measurement system itself never spends LLM tokens — all analysis cost lives in THIS skill,
-which only the user can trigger (`disable-model-invocation: true`). Keep the pass cheap:
+which is marked `USER-INVOKED ONLY` in its description. Keep the pass cheap:
 
 - Read `SUMMARY.md` first — it is the whole picture. Do NOT read every runs.jsonl.
 - Drill into a per-run log (`.stats/<pipeline>/runs/<run-id>.log`) ONLY for pipelines you flagged.
