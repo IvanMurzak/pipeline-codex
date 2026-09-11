@@ -3,6 +3,7 @@ name: Validate plugin
 on:
   push:
   pull_request:
+  workflow_call:
 
 jobs:
   validate:
