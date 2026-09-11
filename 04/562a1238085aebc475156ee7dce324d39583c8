@@ -1,0 +1,23 @@
+README.md
+  s_92153bc4fc0fd9::t_4ea8c06ce86417 22-23,29,743
+.codex-plugin/plugin.json
+  s_92153bc4fc0fd9::t_4ea8c06ce86417 43
+skills/optimize/SKILL.md
+  s_92153bc4fc0fd9::t_4ea8c06ce86417 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "04562a1238085aebc475156ee7dce324d39583c8",
+  "prompts": {},
+  "sessions": {
+    "s_92153bc4fc0fd9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08f31-ea1d-7ac0-ac9d-1067d5501ca8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
