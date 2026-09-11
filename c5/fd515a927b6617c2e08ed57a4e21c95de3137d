@@ -1,0 +1,20 @@
+.github/workflows/validate.yml
+  s_92153bc4fc0fd9::t_9ddc0726fa4810 37-40,43-45,47-49
+  s_92153bc4fc0fd9::t_9dff0e8d7a7b98 26-36,41-42,46,50-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c5fd515a927b6617c2e08ed57a4e21c95de3137d",
+  "prompts": {},
+  "sessions": {
+    "s_92153bc4fc0fd9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08f31-ea1d-7ac0-ac9d-1067d5501ca8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
