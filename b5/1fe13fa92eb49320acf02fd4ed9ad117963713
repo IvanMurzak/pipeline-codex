@@ -1,0 +1,23 @@
+.github/workflows/release.yml
+  s_92153bc4fc0fd9::t_b3cbcd9fb9a7e4 1-57
+.codex-plugin/plugin.json
+  s_92153bc4fc0fd9::t_b3cbcd9fb9a7e4 3
+.github/workflows/validate.yml
+  s_92153bc4fc0fd9::t_b3cbcd9fb9a7e4 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b51fe13fa92eb49320acf02fd4ed9ad117963713",
+  "prompts": {},
+  "sessions": {
+    "s_92153bc4fc0fd9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08f31-ea1d-7ac0-ac9d-1067d5501ca8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
