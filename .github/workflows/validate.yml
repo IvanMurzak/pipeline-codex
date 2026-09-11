@@ -23,3 +23,39 @@ jobs:
           skill_root = Path(manifest['skills'])
           assert skill_root.is_dir() and list(skill_root.glob('*/SKILL.md')), 'no skills found'
           PY
+      - name: Smoke-test installation with Codex CLI
+        run: |
+          docker run --rm \
+            --volume "$PWD:/workspace/plugin:ro" \
+            node:22-bookworm-slim \
+            bash -euo pipefail -c '
+              npm install --global @openai/codex@0.154.0
+
+              mkdir -p /tmp/marketplace/.agents/plugins /tmp/marketplace/plugins
+              cp -R /workspace/plugin /tmp/marketplace/plugins/pipeline
+              cat > /tmp/marketplace/.agents/plugins/marketplace.json <<"JSON"
+          {
+            "name": "pipeline",
+            "interface": { "displayName": "Pipeline CI" },
+            "plugins": [
+              {
+                "name": "pipeline",
+                "source": { "source": "local", "path": "./plugins/pipeline" },
+                "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+                "category": "Productivity"
+              }
+            ]
+          }
+          JSON
+
+              cleanup() {
+                codex plugin remove pipeline@pipeline --json || true
+                codex plugin marketplace remove pipeline --json || true
+              }
+              trap cleanup EXIT
+
+              codex plugin marketplace add /tmp/marketplace --json
+              codex plugin add pipeline@pipeline --json
+              codex plugin list --json > /tmp/plugins.json
+              node -e "const data = require(\"/tmp/plugins.json\"); if (!data.installed.some(plugin => plugin.pluginId === \"pipeline@pipeline\" && plugin.installed)) process.exit(1)"
+            '
