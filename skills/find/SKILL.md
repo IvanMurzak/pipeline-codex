@@ -1,14 +1,13 @@
 ---
 name: find
-description: Find the best-matching pipeline in this project for a task description (or GitHub issue) using the deterministic, AI-free BM25 matcher. Returns a ranked candidate list with exclusion reasons, then asks the user to confirm before chaining into /pipeline:run. Invoke to discover the right pipeline for a task; /pipeline:dispatch is the auto-run variant.
+description: Find the best-matching pipeline in this project for a task description (or GitHub issue) using the deterministic, AI-free BM25 matcher. Returns a ranked candidate list with exclusion reasons, then asks the user to confirm before chaining into $pipeline:run. Invoke to discover the right pipeline for a task; $pipeline:dispatch is the auto-run variant.
 user-invocable: true
-allowed-tools: Bash, Glob, Read
 argument-hint: <task-description-or-github-issue-url>
 ---
 
 # Find a Pipeline by Task Description or GitHub Issue
 
-You are matching a task (`$1`) against the consumer project's pipeline manifests using the deterministic `pipeline match` command — no language-model scoring, no embeddings, no per-call cost. Output a ranked candidate list with rationale, ask the user to pick one, then hand off to `/pipeline:run`.
+You are matching a task (`$1`) against the consumer project's pipeline manifests using the deterministic `pipeline match` command — no language-model scoring, no embeddings, no per-call cost. Output a ranked candidate list with rationale, ask the user to pick one, then hand off to `$pipeline:run`.
 
 ## What you are doing
 
@@ -19,7 +18,7 @@ You are matching a task (`$1`) against the consumer project's pipeline manifests
    - Hard-filters pipelines whose Scope.Out shares ≥ `--neg-threshold` task tokens.
    - Returns ranked surviving candidates plus the excluded list as JSON.
 3. Present the result to the user: top candidates with score and matched terms, plus excluded pipelines with the Scope.Out bullets that excluded them.
-4. Ask the user to pick one (or confirm the single top candidate). Then invoke `/pipeline:run <first-iteration-path>` for the chosen pipeline.
+4. Ask the user to pick one (or confirm the single top candidate). Then invoke `$pipeline:run <first-iteration-path>` for the chosen pipeline.
 
 ## CRITICAL — token discipline
 
@@ -29,7 +28,7 @@ Rules:
 
 - **Never `Read` `PIPELINE.md` or any iteration file (`steps/**/*.md`) yourself.** Let the `pipeline match` command do the reading.
 - **Use `Bash` to invoke `pipeline match` and `Read` only the small JSON result.** The JSON is bounded (top N candidates + excluded list) — usually well under 2 KB.
-- **Hand off to `/pipeline:run`, not directly to `step-executor`.** `/pipeline:run` is the supervisor; it spawns the `pipeline-manager` that parses executor reports and chains the improver / script-creator / next executor.
+- **Hand off to `$pipeline:run`, not directly to `step-executor`.** `$pipeline:run` is the supervisor; it spawns the `pipeline-manager` that parses executor reports and chains the improver / script-creator / next executor.
 
 ## Prerequisites
 
@@ -81,7 +80,7 @@ Rules:
      - ...
    ```
 
-   Empty `candidates` array: tell the user no pipeline matched and suggest either re-running with `--neg-threshold 2` (more permissive — explain that this raises the bar for negative-corpus exclusion) or running `/pipeline:design <goal>` to author a new pipeline.
+   Empty `candidates` array: tell the user no pipeline matched and suggest either re-running with `--neg-threshold 2` (more permissive — explain that this raises the bar for negative-corpus exclusion) or running `$pipeline:design <goal>` to author a new pipeline.
 
    Empty `excluded` array: omit that section entirely.
 
@@ -90,7 +89,7 @@ Rules:
    - Multiple candidates → `Pick one to run, or [c]ancel:`
    - User picks `c` or anything that isn't a listed option → stop without running.
 
-8. **Hand off to `/pipeline:run`.** Once the user has confirmed, invoke `/pipeline:run <chosen.first_iteration>` exactly as if the user typed it themselves. Do not invoke `step-executor` directly — orchestration belongs to `/pipeline:run` and the `pipeline-manager` it spawns.
+8. **Hand off to `$pipeline:run`.** Once the user has confirmed, invoke `$pipeline:run <chosen.first_iteration>` exactly as if the user typed it themselves. Do not invoke `step-executor` directly — orchestration belongs to `$pipeline:run` and the `pipeline-manager` it spawns.
 
 ## Tuning the negative threshold
 
@@ -103,7 +102,7 @@ Re-run with `--neg-threshold 2` (require two-term overlap) before suggesting a m
 
 ## Do not
 
-- **Do not invoke `step-executor` directly.** Always go through `/pipeline:run`.
+- **Do not invoke `step-executor` directly.** Always go through `$pipeline:run`.
 - **Do not modify pipeline files during find.** Matching is read-only.
 - **Do not paraphrase the user's task before passing it to the matcher.** The matcher tokenizes the verbatim text — paraphrasing changes the token set and shifts scores in unpredictable ways. If the user's task is too short to score well, ask them to expand it rather than expanding it yourself.
-- **Do not fall back to LLM-based matching** silently if the matcher returns no candidates. Tell the user the deterministic matcher found nothing, and let them choose: try a different phrasing, raise `--neg-threshold`, or use `/pipeline:dispatch` (which is LLM-based) explicitly.
+- **Do not fall back to LLM-based matching** silently if the matcher returns no candidates. Tell the user the deterministic matcher found nothing, and let them choose: try a different phrasing, raise `--neg-threshold`, or use `$pipeline:dispatch` (which is LLM-based) explicitly.

@@ -1,8 +1,7 @@
 name = "pipeline-script-creator"
 description = "Extracts steps to scripts, converts deterministic iterations to type:script, repairs failed scripts. Invoked with structured brief. Scope: pipeline scripts/ and steps/."
-tools = ["Read", "Edit", "Write", "Bash", "Glob", "Grep"]
-model = "opus"
-color = "yellow"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
 
 developer_instructions = '''
 # Pipeline Script Creator
@@ -59,7 +58,7 @@ where `<pipeline-root>` is the `Pipeline root:` the brief names — normally `<p
 
 Never touch:
 
-- Files outside the brief's `.pipeline/<pipeline-name>/` tree (consumer code, other docs, CI, tests, the consumer's `CLAUDE.md`, etc.).
+- Files outside the brief's `.pipeline/<pipeline-name>/` tree (consumer code, other docs, CI, tests, the consumer's `AGENTS.md`, etc.).
 - The MAIN checkout's pipeline tree when the brief targets an external run's worktree copy (and vice versa — one run, one tree).
 - Files inside `${CODEX_PLUGIN_ROOT}` (the plugin install directory is read-only at runtime).
 - A different pipeline's files than the one named in the brief.

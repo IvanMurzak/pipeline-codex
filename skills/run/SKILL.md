@@ -1,8 +1,7 @@
 ---
 name: run
-description: Run (or resume) a pipeline that the /pipeline:design skill already wrote. Stays in the main session as the thin supervisor and spawns a single pipeline-manager that drives the whole chain in fresh-context step-executors. Invoke when the user wants to run or resume a pipeline.
+description: Run (or resume) a pipeline that the $pipeline:design skill already wrote. Stays in the main session as the thin supervisor and spawns a single pipeline-manager that drives the whole chain in fresh-context step-executors. Invoke when the user wants to run or resume a pipeline.
 user-invocable: true
-allowed-tools: Read, Bash, Glob, Grep, Agent, WebFetch, WebSearch, Skill, TaskCreate, TaskGet, TaskList
 argument-hint: <pipeline-dir-or-iteration.md> [--start <step-name>] [--model <step_id>=<model> ...] [--effort <step_id>=<level> ...] | --resume [<run_id>]
 ---
 
@@ -32,8 +31,8 @@ loop lives* and *what executes one step*:
 
 | Mode | Loop lives in | Executes one step |
 |---|---|---|
-| `session` | this main session | the `Agent` tool, in-session |
-| `manager` *(default)* | a `pipeline-manager` subagent | the `Agent` tool, in-session |
+| `session` | this main session | Codex's native `spawn_agent`, in-session |
+| `manager` *(default)* | a `pipeline-manager` subagent | Codex's native `spawn_agent` |
 | `driver` | a process this plugin owns, no model in the loop (`pipeline drive`) | a fresh `codex exec` process per step |
 | `standalone` | the same owned process as `driver` | the Agent SDK with your own API key — no Codex CLI session at all |
 
@@ -60,31 +59,32 @@ When the pipeline is v1 and the `PIPELINE.md` frontmatter you read for `model:` 
 
 ```bash
 pipeline drive \
+  --executor codex-cli \
   --root "<pipeline_root>" --run-id "<run_id>" [--start "<step-name>"] \
   --default-model "<pipeline_default_model-or-null>" \
   [--default-effort "<level-or-null>"] \
   [--model "<step_id>=<model>" ...] [--effort "<step_id>=<level>" ...] --json [--resume]
 ```
 
-Launch it with `run_in_background: true` and act on its final JSON when it exits: exit 0 → emit `pipeline.completed`; exit 1 → emit `pipeline.halted` and surface the reason; exit 3 (`blocked`) → run the nested-blocker flow below, then re-run `drive` with `--resume`. Everything else about your supervisor role (run id, liveness, mirror binding, human reporting) is unchanged. This `driver` (v1: `runner: headless`) path skips self-improvement actions and leaves `.feedback/<run_id>/` intact — mention that in your final report so the user can run a manual improver pass. When `runner:` is absent or `manager`, proceed exactly as below.
+Launch it as a long-running terminal command and retain the returned process/session handle. Wait on that handle rather than polling files, then act on its final JSON when it exits: exit 0 → emit `pipeline.completed`; exit 1 → emit `pipeline.halted` and surface the reason; exit 3 (`blocked`) → run the nested-blocker flow below, then re-run `drive` with `--resume`. Everything else about your supervisor role (run id, liveness, mirror binding, human reporting) is unchanged. This `driver` (v1: `runner: headless`) path skips self-improvement actions and leaves `.feedback/<run_id>/` intact — mention that in your final report so the user can run a manual improver pass. When `runner:` is absent or `manager`, proceed exactly as below.
 
 ## Model selection
 
-A pipeline (and each iteration) may opt into a Codex model via the OPTIONAL `model:` frontmatter field. The field defaults to inherited — omit it and the step-executor inherits the session model. You resolve only the **pipeline-level default** and hand it to the manager; the `pipeline next` CLI resolves the per-iteration effective model (per-run override ?? `step.model` ?? `pipeline_default_model`) and the manager passes it to each `step-executor` via the `Agent` tool's per-call `model` parameter. **Pass the resolved value through unchanged — do NOT translate an alias to a canonical id.** The `Agent` `model` param accepts the aliases, canonical ids, and `inherit` directly.
+A pipeline (and each iteration) may opt into a model via the OPTIONAL `model:` frontmatter field. The field defaults to inherited — omit it and the step-executor inherits the session model. You resolve only the **pipeline-level default** and hand it to the manager; the `pipeline next` CLI resolves the per-iteration effective model. The manager requests the resolved model through Codex's native spawn interface when that exact model is available, otherwise it inherits and reports the unapplied hint. Never pass a non-Codex model id to `spawn_agent`.
 
-**Accepted `model:` vocabulary** (end-to-end): one of the aliases `haiku` / `sonnet` / `opus` / `fable`, OR any exact canonical Codex model id (a string starting with `claude-`, e.g. `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-fable-5`), OR `inherit` / absent (→ session default).
+**Accepted Codex model vocabulary:** an exact `gpt-*` Codex model id, or `inherit` / absent (→ session default). Cross-client aliases such as `haiku`, `sonnet`, `opus`, and `fable` may still occur in shared pipeline manifests; they are execution hints, not Codex model ids. The manager maps them through its documented Codex routing table before spawning.
 
-**Resolve `pipeline_default_model`:** in a v2 pipeline the CLI reads `defaults.model` from `pipeline.yml` itself — pass `null` and let it. Otherwise, if `<pipeline-root>/PIPELINE.md` exists, `Read` it with `limit: 50` and take the frontmatter `model:` value when it is an accepted value (an alias, a `claude-*` id, kept verbatim); `inherit`/absent → `null`. If `PIPELINE.md` is absent, `null`. **Invalid values** — anything that is not one of the accepted aliases, a `claude-*` id, `inherit`, or absent — warn once and fall through to `null` (do not halt). (Reading ≤ ~10 lines of frontmatter is metadata extraction, not content reading — it never duplicates what the step-executor loads.)
+**Resolve `pipeline_default_model`:** in a v2 pipeline the CLI reads `defaults.model` from `pipeline.yml` itself — pass `null` and let it. Otherwise, if `<pipeline-root>/PIPELINE.md` exists, `Read` it with `limit: 50` and take the frontmatter `model:` value when it is a `gpt-*` id, one of the four shared aliases above, or `inherit`; `inherit`/absent → `null`. If `PIPELINE.md` is absent, use `null`. Warn once and fall through to `null` for any other value.
 
-**Per-run step overrides (`step_model_overrides`):** the user may pin individual steps to a different model FOR THIS RUN ONLY — without editing any pipeline file — either with explicit flags after the path (`--model <step_id>=<model>`, repeatable) or in natural language ("run steps 02-implement and 03-refine on fable"). Normalize whatever they said into `<step_id>=<model>` pairs: `step_id` is the step's `step_id` frontmatter or its filename stem (e.g. `02-implement` for `steps/02-implement.md`); `model` uses the accepted vocabulary above (`inherit` forces the session default for that step). You do NOT read any step file to validate the ids — the CLI warns on unknown ids and rejects invalid models. Pass the pairs to the manager as `step_model_overrides` (see 5.1) or, on the `driver` path, as repeated `--model` flags on the `drive` command. An override beats the step's own `model:` frontmatter; steps without an override are untouched. The CLI persists the overrides in the run's state at init, so resumes keep them automatically — re-pass the same pairs when re-invoking the manager anyway (harmless, and it survives a deleted `.runtime/`). No overrides mentioned ⇒ omit entirely.
+**Per-run step overrides (`step_model_overrides`):** the user may pin individual steps to a different model FOR THIS RUN ONLY — without editing any pipeline file — either with explicit flags after the path (`--model <step_id>=<model>`, repeatable) or in natural language. Normalize whatever they said into `<step_id>=<model>` pairs. Do not read a step file to validate the ids; the CLI validates them. Pass the pairs to the manager or, on the driver path, as repeated `--model` flags. No overrides mentioned ⇒ omit entirely.
 
 ## Effort selection (reasoning effort — the `model:` twin)
 
-A pipeline and each iteration may also opt into a **reasoning effort** via the OPTIONAL `effort:` frontmatter field (levels: `low` / `medium` / `high` / `xhigh` / `max`; `inherit`/absent → the session's effort). It resolves through the exact same ladder as the model — per-run override ?? step `effort:` ?? pipeline `effort:` ?? inherit — entirely inside the `pipeline next` CLI. Resolve `pipeline_default_effort` from the same `PIPELINE.md` frontmatter read you already do for `model:` (same invalid-value rule: warn once, fall to `null`), hand it to the manager as `pipeline_default_effort`, and normalize user requests like "run 03-refine on max effort" into `step_effort_overrides` pairs (`<step_id>=<level>`) passed exactly like the model pairs (`--effort` flags on the `driver` path). HONESTY NOTE: the `driver` runner applies effort for real (`claude --effort` per spawn); in manager mode the Agent tool may not expose a per-call effort parameter yet — the manager passes it when supported and otherwise the step inherits the session effort (see pipeline-manager.md § run-step).
+A pipeline and each iteration may also opt into a **reasoning effort** via the OPTIONAL `effort:` frontmatter field (levels: `low` / `medium` / `high` / `xhigh` / `max`; `inherit`/absent → the session's effort). It resolves through the same ladder as the model inside `pipeline next`. The manager passes the resolved `reasoning_effort` when Codex exposes it and otherwise inherits and reports the unapplied hint. The driver applies it directly to each executor process.
 
 ## Prerequisites
 
-- A pipeline exists under the current project's `./.pipeline/` (typically authored with `/pipeline:design`).
+- A pipeline exists under the current project's `./.pipeline/` (typically authored with `$pipeline:design`).
 - `$1` is the pipeline FOLDER under `./.pipeline/` (e.g. `./.pipeline/ship-feature`), which starts a FRESH run — this always mints a NEW run_id. `--start <step-name>` starts that fresh run at a named step instead of the manifest's first. An iteration file path is still accepted, and is how a v1 pipeline names a starting step. OR `--resume [<run_id>]` to re-enter an EXISTING run under its ORIGINAL run_id (see "Resume Procedure") — the only way to continue a dead session's run without orphaning its state.
 - The current working directory is the consumer project's root — all file edits performed by iterations land here.
 
@@ -105,7 +105,7 @@ pipeline event <event-type> run_id=<literal-id> [k=v ...]
 **What you emit (one call per bullet):**
 
 - **On `--resume`, this whole list does not apply** — the Resume Procedure emits only `write-liveness` + `register-mirror-binding` for the EXISTING run_id, and never `pipeline.started` (re-entering a run is not starting one). See "Resume Procedure".
-- After the banner: `pipeline.started run_id=<id> pipeline_name=<name> first_iteration_path=<abs> pipeline_root=<abs> default_model=<model-or-null>` — `default_model` is `pipeline_default_model` (an alias `haiku`/`sonnet`/`opus`/`fable`, a canonical `claude-*` id, or literal `null`).
+- After the banner: `pipeline.started run_id=<id> pipeline_name=<name> first_iteration_path=<abs> pipeline_root=<abs> default_model=<model-or-null>`.
 - Immediately after `pipeline.started`, write the **liveness lockfile** so a reader can tell this run died without a terminal event: `pipeline event write-liveness run_id=<id> pid=$PPID` (PowerShell: `pid=$PID`). Pass the OS pid of the process **driving** this supervisor — `$PPID` is the best portable handle for the persistent Codex session. The daemon only auto-retires a run when this pid is a real, dead process, so an untrustworthy value is a safe no-op.
 - Immediately after, register the **mirror binding** so the analytics hook can resolve which run this session's events belong to: `pipeline event register-mirror-binding run_id=<id> pipeline_name=<name> iteration_path=<abs-first-iteration>`. Idempotent; silent on success. If `CODEX_SESSION_ID` is unset it writes `session_id=null`, and hook events fall back to `run_id: null`.
 - On `status: completed`: `pipeline.completed run_id=<id> pipeline_name=<name>`.
@@ -136,7 +136,7 @@ The writer pops `run_id`, `parent_run_id`, and `session_id` out of the kv args a
 
    ### 5.1 Spawn the `pipeline-manager`
 
-   Invoke the `Agent` tool with `subagent_type: "pipeline-manager"` and a prompt that hands it every field it needs:
+   Call Codex's native `spawn_agent`, requesting the registered custom agent whose `name` is `pipeline-manager`, with `fork_turns: "none"`. Hand it the prompt below as its task message:
 
    ```
    Orchestrate this pipeline run. Drive the chain to completion via fresh
@@ -147,7 +147,7 @@ The writer pops `run_id`, `parent_run_id`, and `session_id` out of the kv args a
    run_id = <literal run id>
    pipeline_name = <name>
    pipeline_root = <abs path to the pipeline root folder>
-   pipeline_default_model = <haiku|sonnet|opus|null>
+   pipeline_default_model = <model-or-null>
    current_iteration = <current_iteration>
 
    <if PIPELINE.md frontmatter set an effort, or the user asked for one>
@@ -201,18 +201,18 @@ Triggered by step 1 when the invocation is `--resume` (list candidates) or `--re
 **`<pipeline-root>/.runtime/<id>/next.json`'s `phase` field is the SINGLE AUTHORITY on resumability.** `phase: "terminal"` (run finished, `done` or `halt`) — or a missing/unparseable file — means dead; anything else (`await-*` or `blocked`) means the run can be re-entered. The `.stats` SUMMARY "In-flight or crashed runs" section is for DISCOVERY ONLY, to help the human recall run ids — it is NEVER the refusal criterion: a crashed run's `.stats` entry is an unflushed timeline buffer, not a finalized record, so its mere presence or absence proves nothing about resumability.
 
 1. **With an id** (`--resume <run_id>`): `Glob` `./.pipeline/*/.runtime/<run_id>/next.json` (existence only; at most one match across all pipelines in this project).
-   - No match → refuse: "No run found with id `<run_id>`. Start fresh: `/pipeline:run ./.pipeline/<pipeline>`." Stop — do not proceed to step 4.
+   - No match → refuse: "No run found with id `<run_id>`. Start fresh: `$pipeline:run ./.pipeline/<pipeline>`." Stop — do not proceed to step 4.
    - Match found → go to step 3.
 
 2. **Without an id** (bare `--resume`): discover candidates, then ask — this is the ONLY branch that reads more than one `next.json`.
    - `Glob` `./.pipeline/*/.runtime/*/next.json`. For each match, `Read` the file (a small orchestration-cursor JSON, not iteration content) and keep it only when it parses AND `phase !== "terminal"`.
-   - No non-terminal candidates → tell the user there is nothing to resume and suggest starting fresh (`/pipeline:run ./.pipeline/<pipeline>`). Stop.
+   - No non-terminal candidates → tell the user there is nothing to resume and suggest starting fresh (`$pipeline:run ./.pipeline/<pipeline>`). Stop.
    - One or more candidates → list them, one line each: `<pipeline-name> · <run_id> · currently at <current_step_id or current_path> · <phase>` (append `(blocked on an external delegation — resuming will re-attempt this iteration)` when `phase === "blocked"`, so the user can choose knowingly). Optionally cross-reference the `.stats` SUMMARY "In-flight or crashed runs" section (`pipeline stats`) to add a human-friendly "idle for Nh" hint — informational only, never filtering. Ask the user which to resume, or whether to start fresh instead. **This ask is user step 1 of the ≤2-step budget.**
    - On the user's answer (step 2): if they chose to start fresh, stop this flow and use the ordinary Procedure (step 1 onward) instead. If they chose a candidate, you already have its `next.json` content from this pass — skip the re-`Read` in step 3 and continue at step 4 with that id and state.
 
 3. **Load and validate `next.json`** (skip when step 2 already read it): `Read` `<matched-path>`.
    - Unparseable → treat exactly like "missing" (refuse as in step 1).
-   - `phase === "terminal"` → refuse: "Run `<run_id>` already finished (status: `<status>`). It can't be resumed — start a fresh run instead: `/pipeline:run ./.pipeline/<pipeline>`." Stop.
+   - `phase === "terminal"` → refuse: "Run `<run_id>` already finished (status: `<status>`). It can't be resumed — start a fresh run instead: `$pipeline:run ./.pipeline/<pipeline>`." Stop.
    - Otherwise, continue to step 4.
 
 4. **Derive run context from the matched path and the state — no `PIPELINE.md` read, no `steps/**` read.** From `<pipeline-root>/.runtime/<run_id>/next.json`: `pipeline_root` = `<pipeline-root>` (two path segments up from `next.json`), `pipeline_name` = its basename. From the state JSON: `current_iteration = current_path` (per 08.3, the single authority — this is why the resume path never re-derives it from a fresh plan or manifest read), `pipeline_default_model = default_model` (already resolved and persisted at run init; reusing it — instead of re-`Read`ing `PIPELINE.md` frontmatter — is what keeps this path from adding a manifest read on top of the one `next.json` read).
@@ -247,9 +247,9 @@ Brief fields: `parent_task_repo`, `parent_task_issue`, `parent_branch`, `parent_
    gh issue comment <parent_task_issue> --repo <parent_task_repo> --body "Blocked by <blocker_issue_url> (from pipeline iteration <parent_pipeline_iteration>)."
    ```
 
-3. **Resolve `blocker_pipeline_first_iteration`.** If it is `REQUIRES_DESIGN`, stop this blocker flow and report the brief to the user with the exact next action: `/pipeline:design <blocker_design_prompt>`. A skill cannot be spawned through the `Agent` tool; after the user creates the repeatable blocker pipeline, resume from its first iteration.
+3. **Resolve `blocker_pipeline_first_iteration`.** If it is `REQUIRES_DESIGN`, stop this blocker flow and report the brief to the user with the exact next action: `$pipeline:design <blocker_design_prompt>`. A skill is not a custom agent and cannot be selected through `spawn_agent`; after the user creates the repeatable blocker pipeline, resume from its first iteration.
 
-4. **Spawn the child pipeline run** — a child `pipeline-manager` via the `Agent` tool (`subagent_type: "pipeline-manager"`), pointed at `blocker_pipeline_first_iteration`, with its own `run_id=<child_run_id>` and `parent_run_id=<id>` (pass `parent_run_id` literally on the child's events for UI nesting). Its prompt includes the brief fields plus the newly-minted `blocker_issue_number` / `blocker_issue_url`, and the instruction that the child's PR body MUST include `Closes #<blocker_issue_number>`. Provision the child's worktree/branch from `<blocker_worktree_source>`; the child never writes into the parent's worktree. You wait for the child's PR, not for the child subagent call to return.
+4. **Spawn the child pipeline run** — call `spawn_agent`, again requesting the registered `pipeline-manager` with `fork_turns: "none"`, pointed at `blocker_pipeline_first_iteration`, with its own `run_id=<child_run_id>` and `parent_run_id=<id>` (pass `parent_run_id` literally on the child's events for UI nesting). Its prompt includes the brief fields plus the newly-minted `blocker_issue_number` / `blocker_issue_url`, and the instruction that the child's PR body MUST include `Closes #<blocker_issue_number>`. Provision the child's worktree/branch from `<blocker_worktree_source>`; the child never writes into the parent's worktree. You wait for the child's PR, not for the child subagent call to return.
 
 5. **Poll-wait loop.** Every `poll_interval_minutes`, search for a PR closing the blocker issue and emit `blocker.polling run_id=<id> blocker_issue_url=<url> pr_state=<OPEN|MERGED|CLOSED|none>`:
 
@@ -278,7 +278,7 @@ Brief fields: `parent_task_repo`, `parent_task_issue`, `parent_branch`, `parent_
 
 ## Supervisor invariants
 
-- **Spawn ONE manager per supervise-loop pass.** You never spawn `step-executor`, `pipeline-improver`, or `pipeline-script-creator` directly — those are the manager's. The only subagents you spawn are `pipeline-manager` (the run and any blocker-child run). A `REQUIRES_DESIGN` blocker is handed back to the user for `/pipeline:design`.
+- **Spawn ONE manager per supervise-loop pass.** You never spawn `step-executor`, `pipeline-improver`, or `pipeline-script-creator` directly — those are the manager's. The only subagents you spawn are `pipeline-manager` (the run and any blocker-child run). A `REQUIRES_DESIGN` blocker is handed back to the user for `$pipeline:design`.
 - **The Pipeline Manager Final Report is the only structured signal.** Don't infer intent from prose; act only on its fields.
 - **Never read iteration files or `PIPELINE.md` content.** You read at most ~10 lines of `PIPELINE.md` frontmatter (for `pipeline_default_model`) and never touch `steps/**`.
 - **Run-level events, liveness, and the mirror binding are yours; per-iteration events are auto-emitted by the `pipeline next` CLI** (the manager adds only the retrospective's improver/script events). Don't double-emit `iteration.*`.

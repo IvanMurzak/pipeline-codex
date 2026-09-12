@@ -12,10 +12,10 @@ Pipelines are reserved for **repeatable** long-chain workflows — workflows tha
 
 It is NOT a pipeline if the goal is **one-shot** — a single bug fix, a single PR, a one-off cleanup, a single migration that will never run again, a "scaffold this exact change once" task. In those cases:
 
-1. **First, check whether a generic pipeline already fits.** Read the existing `.pipeline/` tree (especially category folders like `workflows/`). A generic pipeline like `workflows/implement-task` is designed to absorb any one-shot task — that's its purpose. Route the one-shot through it via `step-executor` (or via `/pipeline:dispatch`) instead of scaffolding a new pipeline. The user gets the same pipeline benefits (fresh contexts per iteration, durable knowledge base) without polluting `.pipeline/` with a single-use entry.
-2. **If no generic pipeline fits, fall back to a regular agent.** Spawn `Agent({subagent_type: "general-purpose", …})` or a domain-specific teammate with the work embedded in the prompt. Don't invent a new single-use pipeline just to satisfy a "use step-executor" request.
+1. **First, check whether a generic pipeline already fits.** Read the existing `.pipeline/` tree (especially category folders like `workflows/`). A generic pipeline like `workflows/implement-task` is designed to absorb any one-shot task — that's its purpose. Route the one-shot through it via `step-executor` (or via `$pipeline:dispatch`) instead of scaffolding a new pipeline. The user gets the same pipeline benefits (fresh contexts per iteration, durable knowledge base) without polluting `.pipeline/` with a single-use entry.
+2. **If no generic pipeline fits, fall back to a regular Codex subagent.** Call `spawn_agent` with a suitable registered `agent_type` (or omit it for a general worker), `fork_turns: "none"`, and the work embedded in the task. Don't invent a new single-use pipeline just to satisfy a "use step-executor" request.
 
-A pipeline scaffolded for a single PR pollutes `.pipeline/` (which doubles as a knowledge base of the project's *recurring* development processes) and misrepresents what the pipeline system is for. If the caller (`/pipeline:design`, the user, or another agent) hands you a clearly one-shot goal, push back briefly before scaffolding:
+A pipeline scaffolded for a single PR pollutes `.pipeline/` (which doubles as a knowledge base of the project's *recurring* development processes) and misrepresents what the pipeline system is for. If the caller (`$pipeline:design`, the user, or another agent) hands you a clearly one-shot goal, push back briefly before scaffolding:
 
 > "This is one-shot. I'll route it through `<generic-pipeline-path>` (or spawn a general-purpose agent) instead. Use pipelines when the workflow will repeat — e.g. releases, recurring audits, or generic templates."
 
@@ -106,7 +106,7 @@ steps:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `description:` | — | One line, for humans and for `/pipeline:find`. |
+| `description:` | — | One line, for humans and for `$pipeline:find`. |
 | `execution:` | `sequential` | `parallel` dispatches each dependency layer at once. |
 | `isolation:` | `none` | The SCOPE of a git worktree: none / one per step / one per run. |
 | `base_branch:` | `main` | What a run-level worktree forks from. |
@@ -310,7 +310,7 @@ Iteration files are read by a fresh-context executor on every run, so every line
 
 **Where scripts live:** `<pipeline-root>/scripts/<kebab-case-name>.py` — sibling to `steps/`, never inside `steps/`. Default is per-pipeline. Two sanctioned sharing mechanisms exist for larger deployments: a project-wide `_lib/` Python package at the pipeline root (`.pipeline/_lib/`) for helpers shared across pipelines AND hooks (scripts bootstrap it by walking up to find `_lib/`), and a family's `targets/.common/scripts/` for scripts shared by sibling targets (see Principle 16). Never copy-paste helper logic between pipelines — promote it to `_lib/` instead.
 
-**Script conventions:** when you write a script as part of designing a new pipeline (whether called from inside an agent step — this principle — or as the whole `type: script` step of Principle 10), follow the conventions in `${CODEX_PLUGIN_ROOT}/agents/pipeline-script-creator.md` — pathlib for paths, stdlib only by default, argparse + `--help`, exit codes documented, idempotent, cross-platform, and a stdlib-`unittest` test file under `scripts/tests/` (a script is software; it ships with tests). Read that file once at the start of a design session if you anticipate any extractions; its rules are mandatory whenever you, the improver, or the script-creator agent author a script in this system.
+**Script conventions:** when you write a script as part of designing a new pipeline (whether called from inside an agent step — this principle — or as the whole `type: script` step of Principle 10), follow the conventions in `${CODEX_PLUGIN_ROOT}/agents/pipeline-script-creator.toml` — pathlib for paths, stdlib only by default, argparse + `--help`, exit codes documented, idempotent, cross-platform, and a stdlib-`unittest` test file under `scripts/tests/` (a script is software; it ships with tests). Read that file once at the start of a design session if you anticipate any extractions; its rules are mandatory whenever you, the improver, or the script-creator agent author a script in this system.
 
 **Don't script what the CLI already ships:** a step that must wait for GitHub CI (on a PR or a branch) uses the CLI's built-in gate — `pipeline ci-wait --pr <n> --json` — ONE blocking call that fails fast on the first failed check, times out on stuck CI, and prints one compact result (exit 0 passed / 1 failed / 3 timeout / 4 no checks). Never author a sleep-and-poll loop (or a poll script) for CI in a `Steps` block.
 
@@ -438,7 +438,7 @@ The `model:` manifest key is **OPTIONAL and defaults to inherited** — omit it 
 **Accepted vocabulary** for the `model:` value (same under `defaults:` and on any step):
 
 - an alias — `haiku` | `sonnet` | `opus` | `fable`;
-- OR an exact canonical Codex model id — any string starting with `claude-` (e.g. `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-fable-5`). Prefer the alias unless the caller asked to pin one exact id;
+- OR an exact Codex model id — any supported `gpt-*` model id (for example `gpt-5.6-terra`). Prefer an alias unless the caller asked to pin one exact id;
 - OR `inherit` (explicitly use the session default — same effect as omitting the field).
 
 Resolution: `defaults.model:` is the **pipeline default**; a step's own `model:` overrides it. Step wins over pipeline; pipeline wins over the session default.
@@ -453,7 +453,7 @@ model: opus
 ---
 ```
 
-**`effort:` (OPTIONAL — the reasoning-effort twin of `model:`).** A step and `defaults:` may carry an `effort:` key with the same inherit-by-default semantics and the same resolution ladder (step wins over pipeline; pipeline wins over the session's effort level). **Accepted vocabulary:** `low` | `medium` | `high` | `xhigh` | `max` | `inherit` (or omit — inherit). Emit it only when a step genuinely warrants more or less thinking than the session default — e.g. `effort: max` on a hard architectural-reasoning step, `effort: low` on mechanical scaffolding — or when the caller expresses it ("think as hard as possible on the review step"). It composes freely with `model:` (`model: opus` + `effort: max` pins both). Honesty note for your designs: the `driver` runner (`pipeline drive`) applies it for real via `claude --effort` on every executor spawn; manager-driven runs pass it to the Agent tool only when the harness supports a per-call effort parameter (otherwise the step inherits the session's effort).
+**`effort:` (OPTIONAL — the reasoning-effort twin of `model:`).** A step and `defaults:` may carry an `effort:` key with the same inherit-by-default semantics and the same resolution ladder (step wins over pipeline; pipeline wins over the session's effort level). **Accepted vocabulary:** `low` | `medium` | `high` | `xhigh` | `max` | `inherit` (or omit — inherit). Emit it only when a step genuinely warrants more or less thinking than the session default — e.g. `effort: max` on a hard architectural-reasoning step, `effort: low` on mechanical scaffolding — or when the caller expresses it ("think as hard as possible on the review step"). It composes freely with `model:` (`model: opus` + `effort: max` pins both). The `driver` runner (`pipeline drive`) passes it to `codex exec`; manager-driven runs pass it as `reasoning_effort` to `spawn_agent` when the native tool accepts that field, and otherwise inherit the session effort.
 
 ```yaml
 ---
@@ -671,7 +671,7 @@ When invoked with a goal, follow this sequence:
    - Every **fully-deterministic** step (no agent judgment anywhere in it) was considered for `type: script` per Authoring Principle 10 — the zero-token rung. Convert it unless there is an explicit reason not to.
    - Every `type: script` step declares `script:`, and its `params:` bindings name only steps that run before it.
    - Any step whose job is to catch a run that lied about succeeding declares `self_improve: false` (§17).
-9. **Report.** Summarize the pipeline structure, the folder path (absolute, in the consumer project), the manifest's End State line, and how to start execution: `/pipeline:run <absolute-path-to-pipeline-folder>`.
+9. **Report.** Summarize the pipeline structure, the folder path (absolute, in the consumer project), the manifest's End State line, and how to start execution: `$pipeline:run <absolute-path-to-pipeline-folder>`.
 
 ## Invariants
 
@@ -681,14 +681,14 @@ When invoked with a goal, follow this sequence:
 - **Every step body is self-contained.** If you catch yourself assuming the next agent "knows" something, write it into the body — or into a `_shared/` fragment it composes. Never into the manifest: the manifest is configuration, it is not auto-loaded by the executor.
 - **No placeholder iterations.** Do not commit empty or "TBD" files — leave them out of the chain until they are ready, or write them completely.
 - **Do not over-engineer.** The simplest linear chain that accomplishes the goal is best. Only nest when truly necessary.
-- **Respect the project.** Follow the surrounding consumer project's `CLAUDE.md`, constitution, and conventions when designing steps.
+- **Respect the project.** Follow the surrounding consumer project's `AGENTS.md`, constitution, and conventions when designing steps.
 
 ## Handoff to the Executor
 
 Once the pipeline is written and validated, tell the user (or the orchestrator) to start execution with:
 
 ```
-Run it with: /pipeline:run <absolute-path-to-consumer-project>/.pipeline/[<category>/]<pipeline-name>
+Run it with: $pipeline:run <absolute-path-to-consumer-project>/.pipeline/[<category>/]<pipeline-name>
 ```
 
 Do NOT tell the executor to read `pipeline.yml` or `PIPELINE.md` — the definition is metadata, not a step body, and the executor does not auto-load it. Orchestrators may display its End State line as a banner, but the executor runs iterations, not the manifest.

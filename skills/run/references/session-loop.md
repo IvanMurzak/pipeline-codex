@@ -1,6 +1,6 @@
 # `runner: session` — the main session drives the loop itself
 
-You reached this file from `/pipeline:run`'s **Runner selection** section because
+You reached this file from `$pipeline:run`'s **Runner selection** section because
 the pipeline's manifest declares `runner: session`. In this mode the main Codex
 Code session calls `pipeline next` itself and spawns one `step-executor` per
 action. **There is no `pipeline-manager` in this run.**
@@ -145,10 +145,10 @@ your own bookkeeping; never to decide.
 > context this mode is conserving, and let them ask for it deliberately, after
 > the run.
 
-Spawn ONE `step-executor` (`subagent_type: "step-executor"`), **synchronously**
-(`run_in_background: false`) so its report returns in this same turn. Never
-background a spawn and poll for it. Label it
-`description: "<pipeline_name> · step <NN>"`, where `NN` is your own loop
+Call Codex's native `spawn_agent` ONCE with `agent_type: "step-executor"` and
+`fork_turns: "none"`, then wait for that agent with `wait_agent` so its report
+returns before the loop advances. Never start a child and poll an output file.
+Use a task label such as `<pipeline_name> · step <NN>`, where `NN` is your own loop
 counter (`01`, `02`, …) — you do not know the `step_id`, and you are not going
 to look it up.
 
@@ -201,8 +201,8 @@ executor paused with this note — use it to pick up cleanly:
 </if>
 ```
 
-**Model and effort — the honest limitation.** The `Agent` tool's per-call
-`model` is set by the *caller*, and the resolved `steps[].model` is in the brief
+**Model and effort — the honest limitation.** `spawn_agent` model routing is set
+by the *caller*, and the resolved `steps[].model` is in the brief
 you do not read. So:
 
 - Pass `model: "<pipeline_default_model>"` when step 3 resolved a non-null
@@ -213,9 +213,9 @@ you do not read. So:
   `resolved_model` on the journal event, so the journal will disagree with what
   actually ran. Say so when it matters, and tell a user who relies on per-step
   models to run under `manager` or `driver`.
-- Effort is unapplied for the same reason plus one more: no harness exposes a
-  per-call `effort` parameter today. Never try to smuggle either through the
-  prompt text.
+- Pass a resolved non-inherited effort as `reasoning_effort` when the available
+  `spawn_agent` schema exposes it. If that field is absent, inherit the session
+  effort; never smuggle it through the prompt text.
 
 **Depth guard.** You are at depth 0, so a step-executor sits at depth 1 with
 plenty of headroom — the manager's depth ceiling does not bind here. If a spawn
@@ -240,9 +240,9 @@ handed to you again.
 
 ### `run-improver` — spawn `pipeline-improver`
 
-Spawn synchronously, `description: "<pipeline_name> · improver"`, and **pass no
-`model` parameter** — the improver pins itself to Opus + `effort: max` and a
-per-call model would downgrade it. The prompt is the `improvement_brief` you
+Call `spawn_agent` with `agent_type: "pipeline-improver"` and
+`fork_turns: "none"`; pass no per-call model because the registered agent pins
+its own model and reasoning effort. Wait with `wait_agent`. The task is the `improvement_brief` you
 kept from that step's report, verbatim, under one line that hands it the action
 file so it reads its own targets:
 
@@ -266,16 +266,16 @@ The CLI emits these one at a time, in order, never two at once — so **count yo
 own dispatches since the improver**: the first is brief 1, the second brief 2.
 You do not need to open the action file to learn `number`.
 
-Spawn synchronously, `description: "<pipeline_name> · script-creator"`, **no
-`model` parameter**, with that brief verbatim under the same one-line preamble
+Call `spawn_agent` with `agent_type: "pipeline-script-creator"`,
+`fork_turns: "none"`, no per-call model, and that brief verbatim under the same one-line preamble
 (`Your action file is <brief_file>. Read it for iteration_path, number, of.`).
-Wait for the `Script Creator Final Report`, then record
+Wait with `wait_agent` for the `Script Creator Final Report`, then record
 `--record '{"kind":"script","outcome":"created|updated|converted|repaired|refused","script_path":"<abs-or-null>"}'`
 — pass the reported `outcome` through **verbatim**, never re-mapped.
 
 ### `retrospective` — run the Tier-2 retrospective
 
-`Read` `${CODEX_PLUGIN_ROOT}/agents/pipeline-manager.md` and follow its
+Read `${CODEX_PLUGIN_ROOT}/agents/pipeline-manager.toml` and follow its
 **"End-of-run Retrospective"** section as written — you are performing the
 manager's role for this run, and duplicating that contract here would let the
 two drift. Two adjustments, and only two:

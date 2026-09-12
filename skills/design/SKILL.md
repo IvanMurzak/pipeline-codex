@@ -2,14 +2,13 @@
 name: design
 description: Design a new repeatable long-chain AI workflow as a pipeline — a pipeline.yml manifest plus the markdown its steps read — under this project's .pipeline/. Invoke only for workflows that will be re-run many times, such as releases, recurring audits, and generic task templates; route one-shot tasks through an existing generic pipeline or a regular agent instead.
 user-invocable: true
-allowed-tools: Read, Edit, Write, Bash, Glob, Grep, WebFetch, WebSearch, Agent
 argument-hint: <high-level goal>
 ---
 
 # Design a Pipeline
 
 Design the pipeline directly. The goal is `$1`, the argument passed after
-`/pipeline:design`; do not delegate its authoring to a specialised subagent.
+`$pipeline:design`; do not delegate its authoring to a specialised subagent.
 
 ## Start
 
@@ -25,7 +24,7 @@ Design the pipeline directly. The goal is `$1`, the argument passed after
 
 Do not create a pipeline for a single bug fix, PR, cleanup, or migration that
 will not be repeated. First look for a suitable generic pipeline and route the
-task through `/pipeline:run` or `/pipeline:dispatch`; if none exists, use a
+task through `$pipeline:run` or `$pipeline:dispatch`; if none exists, use a
 regular agent. Explain the alternative briefly. If the user explicitly insists,
 create the pipeline and note that it is an exception.
 
@@ -47,4 +46,4 @@ After writing the pipeline, report:
 
 - its absolute folder path;
 - its ordered step names; and
-- the command to begin: `/pipeline:run <absolute-path>`.
+- the command to begin: `$pipeline:run <absolute-path>`.

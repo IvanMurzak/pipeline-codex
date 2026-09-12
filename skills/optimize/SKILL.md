@@ -2,7 +2,6 @@
 name: optimize
 description: USER-INVOKED ONLY (e.g. on a weekly schedule) — review the pipeline run measurements under .pipeline/.stats/ (durations, outcomes, tokens, tool failures), inspect run logs where something regressed or repeatedly failed, and apply targeted improvements to specific pipelines via pipeline-improver. Never auto-invoke this skill; it exists so measurement review costs zero tokens until the user explicitly asks for it.
 user-invocable: true
-allowed-tools: Read, Bash, Glob, Grep, Agent, AskUserQuestion
 argument-hint: "[pipeline-name … | leave empty to review everything]"
 ---
 
@@ -77,7 +76,7 @@ which is marked `USER-INVOKED ONLY` in its description. Keep the pass cheap:
    `script_creation_briefs`, spawn `pipeline:pipeline-script-creator` once per brief, sequentially.
 
 6. **Report.** Per pipeline: status (healthy / improved / needs-human), what changed, and the
-   measurement that should move next week. Remind the user the next `/pipeline:optimize` run will
+   measurement that should move next week. Remind the user the next `$pipeline:optimize` run will
    show whether the change helped (the stats files are the before/after evidence).
 
 ## Boundaries

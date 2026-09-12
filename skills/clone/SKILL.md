@@ -2,7 +2,6 @@
 name: clone
 description: Scaffold a ready-made pipeline into this project by copying a template that ships with the installed pipeline CLI into ./.pipeline/<name>/. Use to bootstrap a working pipeline (e.g. support-answer, ship-feature, example-minimal) without authoring one from scratch. Also lists the available templates with --list.
 user-invocable: true
-allowed-tools: Bash
 argument-hint: <template-name>  (or --list to see all)
 ---
 
@@ -25,7 +24,7 @@ Do NOT `Read` the cloned `PIPELINE.md` or any `steps/**/*.md` content, and do no
 open the template source. Your only job is to shell out to the installed CLI in
 the user's current working directory and report what it printed. The CLI already
 lists every file it created; relay that, do not re-read the tree to describe it.
-(This skill's `allowed-tools` is `Bash` only, which enforces that.)
+(This skill performs the clone through the installed CLI and does not edit template files itself.)
 
 ## Procedure
 
@@ -36,8 +35,8 @@ lists every file it created; relay that, do not re-read the tree to describe it.
    pipeline clone <passthrough-args>
    ```
 
-   - Bare form: `/pipeline:clone support-answer` → run `... clone support-answer`.
-   - `/pipeline:clone --list` → run `... clone --list` to show the available
+   - Bare form: `$pipeline:clone support-answer` → run `... clone support-answer`.
+   - `$pipeline:clone --list` → run `... clone --list` to show the available
      templates (no clone happens).
    - Pass `--force` (overwrite an existing target) and `--dir <path>` (clone into a
      different project root instead of the cwd) straight through when the user
@@ -56,7 +55,7 @@ lists every file it created; relay that, do not re-read the tree to describe it.
      of valid templates; relay it so the user can pick a real one.
 
 3. **On a successful clone, tell the user briefly how to run it.** Keep it short:
-   - Run it from here: `/pipeline:run <cwd>/.pipeline/<name>/steps/01-*.md`, or
+   - Run it from here: `$pipeline:run <cwd>/.pipeline/<name>/steps/01-*.md`, or
    - Run it as a `driver` from a terminal: `pipeline drive <name>`.
    - For the **`support-answer`** template specifically, mention that it takes two
      pipeline variables — `PP_QUESTION` (the question to answer) and `PP_DOCS_DIR`
@@ -74,4 +73,4 @@ lists every file it created; relay that, do not re-read the tree to describe it.
   hardcode the list here; it grows over time.
 - This skill never edits the template after cloning. If the user wants to adapt it,
   they edit the files under `./.pipeline/<name>/` themselves, or use
-  `/pipeline:design` for a brand-new pipeline.
+  `$pipeline:design` for a brand-new pipeline.

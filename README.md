@@ -1,7 +1,7 @@
 # Pipeline - Codex
 
-[![Codex CLI](https://img.shields.io/badge/Codex_Code-plugin-D97757?style=for-the-badge&logo=anthropic&logoColor=white&labelColor=0D1117)](https://claude.com/claude-code)
-[![Release](https://img.shields.io/github/v/release/IvanMurzak/pipeline-claude?style=for-the-badge&logo=github&logoColor=white&label=release&labelColor=0D1117&color=3FB950)](https://github.com/IvanMurzak/pipeline-claude/releases)
+[![Codex CLI](https://img.shields.io/badge/Codex_CLI-plugin-D97757?style=for-the-badge&logo=openai&logoColor=white&labelColor=0D1117)](https://github.com/openai/codex)
+[![Release](https://img.shields.io/github/v/release/IvanMurzak/pipeline-codex?style=for-the-badge&logo=github&logoColor=white&label=release&labelColor=0D1117&color=3FB950)](https://github.com/IvanMurzak/pipeline-codex/releases)
 [![CLI](https://img.shields.io/npm/v/%40baizor%2Fpipeline?style=for-the-badge&logo=npm&logoColor=white&label=CLI&labelColor=0D1117&color=CB3837)](https://www.npmjs.com/package/@baizor/pipeline)
 [![License](https://img.shields.io/badge/license-MIT-6E7681?style=for-the-badge&labelColor=0D1117)](LICENSE)
 
@@ -16,14 +16,14 @@ Two commands. The second one from the project where you want pipelines to live.
 
 ## Install
 
-**1. The plugin**, so Codex CLI has the `$/pipeline:*` commands:
+**1. The plugin**, so Codex CLI can discover the `$pipeline:*` skills:
 
 ```bash
 codex plugin marketplace add IvanMurzak/pipeline-codex-marketplace
 codex plugin add pipeline@pipeline
 ```
 
-Already inside Codex CLI? The same two, as slash commands:
+Already inside Codex CLI? The same two through its built-in plugin commands:
 
 ```text
 /plugin marketplace add IvanMurzak/pipeline-codex-marketplace
@@ -69,21 +69,17 @@ applies on Windows.**
 - **Bun.** The CLI's executable is TypeScript, so Bun is required, not preferred.
   `pipeline init` stops immediately with the install URL if `bun` isn't found.
 - **Codex CLI, installed and authenticated** with your own subscription or API
-  key. Pipeline steps are executed by `claude`; it is your account that runs them
-  and your account that pays for them. If `claude` isn't on `PATH`, `init` says
+  key. Pipeline steps are executed by `codex`; it is your account that runs them
+  and your account that pays for them. If `codex` isn't on `PATH`, `init` says
   so, skips the plugin install and the starter run, and still exits 0 — the clone
   and the dashboard are done, and you re-run `pipeline init` once Codex CLI is
   there.
 - **Git Bash — Windows only.** This plugin's hooks are pinned to `bash`, so a
   Windows machine needs one. Install
   [Git for Windows](https://git-scm.com/download/win), which bundles Git Bash, or
-  run `winget install --id Git.Git -e --source winget`. Codex CLI finds it by
-  **probing fixed locations first** — `CLAUDE_CODE_GIT_BASH_PATH`, then
-  `C:\Program Files\Git\bin\bash.exe`, then the `(x86)` variant — and only then
-  falls back to deriving `..\..\bin\bash.exe` from wherever `git` resolves on
-  `PATH`. An install that does not match that shape — a Scoop shim, for instance —
-  is not found even though `git` works: point `CLAUDE_CODE_GIT_BASH_PATH` at its
-  `bash.exe`. **Without Git Bash** the hooks **fail visibly**: Codex CLI reports
+  run `winget install --id Git.Git -e --source winget`. Keep `bash.exe` on
+  `PATH`, or install Git for Windows in its standard location under
+  `C:\Program Files\Git`. **Without Git Bash** the hooks **fail visibly**: Codex CLI reports
   each hook it could not start, a few times per session, rather than silently
   doing nothing. That is the intended trade — an error you can see and act on,
   instead of hooks that look installed and quietly never run. It does not
@@ -154,7 +150,7 @@ $pipeline:dispatch fix the flaky auth test in the checkout suite
 
 `dispatch` matches your task against every pipeline manifest in the project with
 a deterministic BM25 matcher — free, no model call — and only escalates to a
-cheap Haiku disambiguator when the top two candidates are genuinely close. Most
+low-cost `gpt-5.6-luna` disambiguator when the top two candidates are genuinely close. Most
 tasks resolve on the free tier.
 
 ## Watch it run, from anywhere
@@ -191,7 +187,7 @@ and the Codex build of this plugin in [`IvanMurzak/pipeline-codex`](https://gith
 
 ## What you get
 
-**Five slash commands.**
+**Five Codex skills.**
 
 | Command | What it does |
 |---|---|
@@ -209,7 +205,7 @@ and the Codex build of this plugin in [`IvanMurzak/pipeline-codex`](https://gith
 | `step-executor` | Runs a single step, in its own fresh context |
 | `pipeline-improver` | Feeds what a run learned back into the pipeline's own prose |
 | `pipeline-script-creator` | Extracts deterministic blocks out of markdown into scripts |
-| `pipeline-disambiguator` | Breaks a close match — runs on Haiku to keep the ladder cheap |
+| `pipeline-disambiguator` | Breaks a close match — runs on `gpt-5.6-luna` to keep the ladder cheap |
 
 **Departments.** A remote MCP server and a background notifier: hand a task to
 another agent or team from inside Codex CLI, and hear back when it needs you or
@@ -224,7 +220,7 @@ looks the way it does.
 
 | Rule | In practice |
 |---|---|
-| **Skills read only their own role's input** | `$/pipeline:run` is a router and never opens a step body. `$/pipeline:design` reads the project only while authoring. `$/pipeline:dispatch` reads manifests, capped at 300 tokens each, because matching needs them. |
+| **Skills read only their own role's input** | `$pipeline:run` is a router and never opens a step body. `$pipeline:design` reads the project only while authoring. `$pipeline:dispatch` reads manifests, capped at 300 tokens each, because matching needs them. |
 | **Steps get leaner over time** | Long deterministic blocks — build sequences, filesystem work, multi-call API chains — become scripts under `scripts/`, replaced by a one-line invocation. The executor reads one line; the logic runs in Bash, never through the model. |
 | **The manifest is metadata, not a step** | Capped at 300 tokens, never auto-loaded, opt-in per step via an explicit `Context` reference. Adding a pipeline does not raise anyone else's baseline cost. |
 
@@ -250,8 +246,8 @@ not its model, not its type. The files under `steps/` are prose a step is handed
         └── ...
 ```
 
-All files live inside **your current project** (the working directory Codex
-Code was launched from). The plugin itself is read-only at runtime.
+All files live inside **your current project** (the working directory where
+Codex CLI was launched). The plugin itself is read-only at runtime.
 
 ### The manifest — `pipeline.yml`
 
@@ -266,11 +262,11 @@ isolation: run
 steps:
   - name: bump
     body: steps/bump.md
-    model: haiku
+    model: gpt-5.6-luna
 
   - name: changelog
     body: steps/changelog.md
-    model: opus
+    model: gpt-5.6-sol
 
   - name: publish
     type: script
@@ -311,9 +307,9 @@ executes one step* change between them.
 
 | Mode | Loop lives in | Executes one step |
 |---|---|---|
-| `session` | This Codex CLI session | The `Agent` tool, as a subagent, in this session |
-| `manager` *(default)* | A `pipeline-manager` subagent | The `Agent` tool, as a subagent |
-| `driver` | A process the plugin owns — no model in the loop | A fresh `codex exec` process per step, spawned by `pipeline drive` |
+| `session` | This Codex CLI session | Native `spawn_agent`, in-session |
+| `manager` *(default)* | A `pipeline-manager` subagent | Native `spawn_agent` + `wait_agent` |
+| `driver` | A process the plugin owns — no model in the loop | A fresh `codex exec` process per step, spawned by `pipeline drive --executor codex-cli` |
 | `standalone` | The same owned process as `driver` | The Agent SDK, using your own API key — no Codex CLI session at all |
 
 `session` and `manager` trade context for moving parts: `session` keeps every
@@ -325,11 +321,11 @@ mode. `driver` and `standalone` share that same owned loop and differ only in
 the executor: `driver` shells out to a fresh `codex exec` per step and rides
 your existing Codex CLI subscription; `standalone` goes through the Agent SDK
 with your own API key instead, so no Codex CLI installation is required at
-all. Don't read `driver` (the mode) and `pipeline drive` (the command) as
+all. Don't read `driver` (the mode) and `pipeline drive --executor codex-cli` (the command) as
 interchangeable — one names a concept, the other names how you invoke it.
 
 **What ships in this plugin today:** `session` and `manager` run through
-`$/pipeline:run`; `driver` runs through `pipeline drive`, which v1 pipelines
+`$pipeline:run`; `driver` runs through `pipeline drive --executor codex-cli`, which v1 pipelines
 select via the `PIPELINE.md` field `runner: headless` (`driver`'s v1 spelling —
 a rename with a read-time shim, so nothing that already sets it changes
 behavior). `standalone` and a `pipeline.yml`-level `runner:` key belong to this
@@ -346,7 +342,7 @@ This section is the practical walkthrough — install once, then a small set of 
 |---|---|---|---|
 | Author a new repeatable workflow | `$pipeline:design <goal>` | n/a (writes files) | one-time design cost |
 | Pick a pipeline for a task and **see** the match before running | `$pipeline:find <task or GH issue URL>` | yes | ~zero LLM tokens |
-| Pick a pipeline for a task and **just run it** | `$pipeline:dispatch <task>` | no | ~zero for ~80% of tasks; cheap Haiku for ambiguous; full only for chains |
+| Pick a pipeline for a task and **just run it** | `$pipeline:dispatch <task>` | no | ~zero for ~80% of tasks; low-cost Codex disambiguation when ambiguous; full only for chains |
 | Run / resume a specific pipeline you already know the path of | `$pipeline:run <abs-path-to-pipeline-folder>` | no | n/a |
 
 `$pipeline:design` is the only skill that **writes** files (your new pipeline). The matching skills (`find`, `dispatch`) are read-only inspections of `PIPELINE.md` manifests; the run skills (`run`, `dispatch`) execute pipelines that do whatever those pipelines say in their iteration `Steps`.
@@ -429,7 +425,7 @@ hard-filter — then it escalates only as far as it has to:
 | Outcome | What happens | Cost |
 |---|---|---|
 | One confident match *(the common case)* | Runs immediately. | Zero LLM cost on matching |
-| Top-2 within 2× of each other | A Haiku disambiguator reads just those manifests and picks. | Fractions of a cent |
+| Top-2 within 2× of each other | A `gpt-5.6-luna` disambiguator reads just those manifests and picks. | Low |
 | Zero matches, and the task reads like a chain | Full-context chain detection in the main session. | Expensive, and rare |
 
 **Working from a GitHub issue.** Either skill accepts a URL or `owner/repo#NUMBER` instead of free-form text:
@@ -448,7 +444,7 @@ If `$pipeline:find` returns no candidates and the excluded list doesn't reveal a
 1. **Re-read your task wording.** Pipelines match on terminology that appears in `End State` / `Scope.In` / pipeline name. If you describe a "schema migration" but the relevant pipeline calls it "database evolution", your wording and the matcher's vocabulary don't overlap.
 2. **Try `--neg-threshold 2`** (you can pass `--` flags after the task in the command if you need to). Default is 1, which is strict. Raising it to 2 means "only exclude if at least 2 task tokens overlap with `Scope.Out`."
 3. **Author a new pipeline** with `$pipeline:design <goal>` if no existing pipeline really covers the task and the workflow will repeat.
-4. **Fall back to a regular agent** (`Agent({subagent_type: "general-purpose", …})` or a domain-specific teammate) for genuinely one-shot work — pipelines are for *repeatable* workflows.
+4. **Fall back to a regular Codex subagent** (`spawn_agent` with a suitable registered agent type, or a generic worker) for genuinely one-shot work — pipelines are for *repeatable* workflows.
 
 ### Day-N — letting pipelines improve themselves
 
@@ -463,7 +459,7 @@ on every run flags that too, and `pipeline-script-creator` extracts it to
 
 **Tier 2 — end-of-run retrospective.** While the run is in flight, every step
 writes down *every* problem it hits — not only the blocking ones — into a
-gitignored `.feedback/` folder. At the end, one Opus improver pass consolidates
+gitignored `.feedback/` folder. At the end, one `gpt-5.6-sol` improver pass consolidates
 the doc-related ones and fixes the pipeline in a batch.
 
 The split matters: problems the improver cannot fix on its own — real code bugs,
@@ -540,10 +536,10 @@ Each call walks down the ladder; it stops at the first tier that produces a usab
 | Tier | What runs | When | Token cost |
 |------|-----------|------|-----------:|
 | 1 | `pipeline match` (BM25 + keyword filter, run with Bun) | always | ~zero |
-| 2 | `pipeline-disambiguator` agent (Haiku 4.5) with 2–5 ambiguous candidates' manifests inlined | when the matcher returns ≥ 2 candidates with top1/top2 score ratio < 2.0 | low — Haiku, scales with ambiguity not project size |
+| 2 | `pipeline-disambiguator` agent (`gpt-5.6-luna`) with 2–5 ambiguous candidates' manifests inlined | when the matcher returns ≥ 2 candidates with top1/top2 score ratio < 2.0 | low — scales with ambiguity, not project size |
 | 3 | Main-session reasoning over all manifests to detect a chain | when the matcher returns 0 candidates AND task contains chain phrasing (`then`, `after that`, `followed by`, …) | full — same as the pre-refactor design used to cost on every call |
 
-The 80% case (one pipeline obviously matches): tier 1 only, no LLM. The 15% case (ambiguous): tier 1 + Haiku tier 2. The 5% case (chain across pipelines): tier 1 + tier 3. Average token cost per dispatch dropped by ~90% versus the pre-refactor design where every call paid the tier-3 cost.
+The 80% case (one pipeline obviously matches): tier 1 only, no LLM. The 15% case (ambiguous): tier 1 + low-cost Codex tier 2. The 5% case (chain across pipelines): tier 1 + tier 3. Average token cost per dispatch dropped by ~90% versus the pre-refactor design where every call paid the tier-3 cost.
 
 Example output:
 
@@ -559,8 +555,8 @@ Excluded by Scope.Out:
   - migrate-db: Scope.Out includes ["server release"]; matching terms: ["release", "server"]
   - audit-deps: Scope.Out includes ["server release"]; matching terms: ["release", "server"]
 
-Run "release-server" now? [Y/n]            # $/pipeline:find — asks
-▶ Why: BM25 confident match (ratio 4.2)    # $/pipeline:dispatch — auto-runs
+Run "release-server" now? [Y/n]            # $pipeline:find — asks
+▶ Why: BM25 confident match (ratio 4.2)    # $pipeline:dispatch — auto-runs
 ```
 
 For a GitHub issue, run either skill with the URL: `$pipeline:find https://github.com/owner/repo/issues/123`. The matcher calls `gh issue view --json title,body` and uses that as the task. Useful when triaging incoming issues.
@@ -592,7 +588,7 @@ When the run ends — completed or halted — the manager sorts what it collecte
 
 | Bucket | Contains | Goes to |
 |---|---|---|
-| **Doc-actionable** | doc flaws, ambiguities, script-extraction candidates | One Opus `pipeline-improver` batch pass that consolidates, dedups, and applies the fixes — reading current state first, so it never re-does what Tier 1 already landed — then hands confirmed extractions to `pipeline-script-creator`. |
+| **Doc-actionable** | doc flaws, ambiguities, script-extraction candidates | One `gpt-5.6-sol` `pipeline-improver` batch pass that consolidates, dedups, and applies the fixes — reading current state first, so it never re-does what Tier 1 already landed — then hands confirmed extractions to `pipeline-script-creator`. |
 | **Human-only** | real project bugs, environment issues, general friction | Straight to you, summarised in the run's final report. |
 
 The pipeline never tries to auto-fix your code or your machine. The feedback
@@ -607,7 +603,7 @@ Boundaries:
 - Tier-1: one improvement brief per iteration, max. Tier-2: one batch improver pass per run, run once at the end (a no-op when no problems were journaled).
 - The `.feedback/` tree is gitignored by a self-contained `.feedback/.gitignore` (a single `*`), so feedback never lands in your commits.
 
-You can also invoke `pipeline-improver` directly via the `Agent` tool when you spot a pipeline-doc flaw yourself.
+You can also invoke the registered `pipeline-improver` custom agent directly through `spawn_agent` when you spot a pipeline-doc flaw yourself.
 
 ## Token-cheap iterations via script extraction
 
@@ -627,7 +623,7 @@ Boundaries:
 - Stdlib only by default. Cross-platform (`pathlib`, `tempfile`, no POSIX shell syntax). Argparse-driven CLI with `--help`. Idempotent.
 - The script-creator refuses extractions that would require agent judgment, deletions of `Success Criteria`, renumbering, or breaking `Next` links. It is a leaf agent — it does not loop back to the executor or improver.
 
-You can also invoke `pipeline-script-creator` directly via the `Agent` tool when you've drafted a structured `script_creation_brief` yourself and want to apply it manually.
+You can also invoke the registered `pipeline-script-creator` custom agent directly through `spawn_agent` when you've drafted a structured `script_creation_brief` yourself and want to apply it manually.
 
 ## Script steps (zero-token steps)
 
@@ -705,7 +701,7 @@ pipeline ci-wait --json                   # no selector = the repo's default bra
 
 `--pr` accepts a number, URL, or head-branch name (via `gh pr checks`, covering Actions and third-party checks). `--branch`/`--sha` poll the commit check-runs API; a branch is resolved to its HEAD sha once at start, so a later push is a new gate rather than a moving target. Requires an authenticated `gh` CLI (`--repo <path>` selects which repo's remote to use; default: the current directory).
 
-## Measuring every run (`.pipeline/.stats/` + `$/pipeline:optimize`)
+## Measuring every run (`.pipeline/.stats/` + `$pipeline:optimize`)
 
 Every pipeline run is measured by **pure software — no AI agent, zero LLM tokens**. It is ON by
 default (`PIPELINE_STATS_ENABLED=0` disables). The `pipeline next` engine appends a timeline as the
@@ -731,7 +727,7 @@ simple text files to review whenever you like:
 FAILED during the run (`tokens.tools_failed` + a per-tool breakdown like `{"Bash": 5}`), and
 appends each failure — timestamp, tool, the step it happened in, the error the tool returned —
 to the run's `.log`. A run can be "completed" and still be sick: dozens of failed calls mean the
-steps are retrying their way to success on wrong instructions. `driver` (`pipeline drive`) runs
+steps are retrying their way to success on wrong instructions. `driver` (`pipeline drive --executor codex-cli`) runs
 fold their pinned per-step session transcripts at the terminal action, so their failures carry
 exact step attribution; manager runs attribute by step time-windows.
 
@@ -739,7 +735,7 @@ View from the terminal any time with `pipeline stats [--project <path>] [--json]
 prints `SUMMARY.md`). Crashed/killed runs surface in SUMMARY under "in-flight or
 crashed" via their leftover timeline buffers.
 
-**Closing the loop — `$/pipeline:optimize`.** A deliberately **user-invoked-only** skill
+**Closing the loop — `$pipeline:optimize`.** A deliberately **user-invoked-only** skill
 (marked `USER-INVOKED ONLY` in its description so agents do not auto-trigger it): run it weekly
 (or whenever) and it reads `SUMMARY.md`, flags pipelines whose halts/duration/tokens regressed
 against their own history — and pipelines with recurring tool failures (same tool failing run
@@ -763,18 +759,18 @@ finite context.
 | Who | Does |
 |---|---|
 | `step-executor` *(subagent)* | Recognises the blocker and prepares a brief. Nothing else. |
-| `$/pipeline:run` *(main session)* | Files the issue, spawns the child run, and does the waiting. |
+| `$pipeline:run` *(main session)* | Files the issue, spawns the child run, and does the waiting. |
 
 1. The executor stabilizes the parent branch (commits what's done, or reverts the unfinished chunk so the branch is green) and picks the blocker's target repo and base branch.
 2. The executor emits a `blocker_delegation` brief in its final report with a full issue body, the child pipeline's first iteration path, a `partial_work_note` for resumption, and poll/deadline settings.
-3. The `pipeline-manager` relays the brief up to `$/pipeline:run`, which files a
+3. The `pipeline-manager` relays the brief up to `$pipeline:run`, which files a
    **new GitHub issue** on the blocker's target repo, posts a back-link on the
    parent's issue so the relationship is visible from both sides, and spawns a
-   **child run** via the `Agent` tool. The child's worktree defaults to `main` of
+   **child run** via Codex's native `spawn_agent`. The child's worktree defaults to `main` of
    the target repo; the parent's branch is used as the base only when `main`
    lacks state that is strictly prerequisite to starting the fix.
-4. `$/pipeline:run` **waits** — polling for the child PR to merge (default interval 5 minutes, default deadline 4 hours) — instead of advancing the chain.
-5. On merge, `$/pipeline:run` fetches the blocker target's updated base, merges (or rebases) it into the parent's branch, re-runs the iteration's verification gate, and re-invokes the `pipeline-manager` to re-enter the original iteration with the `partial_work_note` embedded in the prompt.
+4. `$pipeline:run` **waits** — polling for the child PR to merge (default interval 5 minutes, default deadline 4 hours) — instead of advancing the chain.
+5. On merge, `$pipeline:run` fetches the blocker target's updated base, merges (or rebases) it into the parent's branch, re-runs the iteration's verification gate, and re-invokes the `pipeline-manager` to re-enter the original iteration with the `partial_work_note` embedded in the prompt.
 
 Closed without merging, merge conflicts, a red verification gate, or a hit
 deadline all **halt the chain for human review** rather than auto-retrying.
@@ -785,7 +781,7 @@ together:
 | Side | Covers | Lives in |
 |---|---|---|
 | Executor | in-scope vs tangent vs blocker heuristics, brief shape, executor invariants | `step-executor`'s prompt, "Nested-Blocker Delegation" |
-| Caller | issue creation, child spawn, poll-wait, merge, re-invocation | `$/pipeline:run`'s skill, "Nested-Blocker Flow" |
+| Caller | issue creation, child spawn, poll-wait, merge, re-invocation | `$pipeline:run`'s skill, "Nested-Blocker Flow" |
 
 If you edit one side, edit the other in lockstep.
 
@@ -832,11 +828,11 @@ steps:
 much of the graph may run at once. Keep it sequential when in doubt —
 parallelism is an optimisation for genuinely independent work, not a default.
 
-In DAG mode the manager runs each ready set concurrently and merges the finished
-branches back one at a time. Independent steps should never conflict; if two of
-them did edit the same file, the merge conflicts and the run halts. That means
-the pipeline was mis-designed — make those steps sequential, or split the shared
-file out.
+In DAG mode, native manager subagents can overlap only when the pipeline owns a
+safe manual-isolation strategy; they otherwise share the caller's working
+directory. Per-step worktree isolation is provided by the process driver. A
+manager-mode run that requests it halts with an actionable message instead of
+pretending the subagents are isolated.
 
 ### `isolation:` — one axis, three values
 
@@ -845,7 +841,7 @@ Isolation is **scope, and nothing else**.
 | Value | What you get | Use when |
 |---|---|---|
 | `none` | No worktree. Steps run in place. | Sequential pipelines that touch only their own outputs — the default, and right for most. |
-| `step` | One throwaway git worktree per step, under `.codex/worktrees/`, merged back on success. | `execution: parallel`, where concurrent steps must not see each other's files. |
+| `step` | One throwaway git worktree per step, merged back on success by the process driver. | `execution: parallel`, where concurrent steps must not see each other's files. |
 | `run` | One worktree for the whole run, provisioned by your own hooks. Sequential only. | Steps need what git alone cannot give: allocated ports, a rendered `.env`, dev secrets, submodule worktrees. |
 
 > **v1's `worktree`, `manual` and `external` are gone.** They named three
@@ -925,7 +921,7 @@ Everything configurable, in one place. All fields are OPTIONAL — a pipeline wi
 |---|---|---|
 | `schema:` | `2` | Required, exact. A manifest that does not say which format it is written in is the ambiguity v2 removes. |
 | `name:` | — | Required. The pipeline's name. |
-| `description:` | — | One line — shown by `$/pipeline:find`, and matched against your task. |
+| `description:` | — | One line — shown by `$pipeline:find`, and matched against your task. |
 | `execution:` | `sequential` \| `parallel` | `parallel` dispatches each dependency layer at once. The graph itself is `needs:`; this decides only how much of it may run together. |
 | `isolation:` | `none` \| `step` \| `run` | The SCOPE of a git worktree: none, one per step (parallel layers, merged after), or one per run (consumer-provisioned, sequential-only). |
 | `defaults:` | — | `model:` / `effort:` inherited by every step that does not set its own. |
@@ -1004,10 +1000,10 @@ git forever. It never touches a branch outside that pattern.
 | What                          | Where                                             |
 |-------------------------------|---------------------------------------------------|
 | Your pipelines                | `<your-project>/.pipeline/<pipeline-name>/...` |
-| Parallel-step worktrees       | `<your-project>/.codex/worktrees/<auto-name>/` (transient — created + removed per DAG step) |
+| Parallel-step worktrees       | Available through the process driver; native manager subagents share cwd and reject runtime worktree isolation |
 | Per-pipeline scripts          | `<your-project>/.pipeline/<pipeline-name>/scripts/*.py` |
 | Per-run feedback (Tier-2)     | `<your-project>/.pipeline/<pipeline-name>/.feedback/<run_id>/` (gitignored, transient — created at run start, deleted after the end-of-run retrospective) |
-| Plugin agents                 | `${CODEX_PLUGIN_ROOT}/agents/*.md` (read-only)   |
+| Plugin agents                 | `${CODEX_PLUGIN_ROOT}/agents/*.toml` (read-only)   |
 | Plugin skills                 | `${CODEX_PLUGIN_ROOT}/skills/*/SKILL.md` (read-only) |
 
 The plugin never writes inside itself. Every pipeline file, every code edit performed by an executor, every log entry — all land in the consumer project's working directory.
@@ -1018,8 +1014,8 @@ Runs are recorded as they happen in an append-only journal at
 `<project>/.pipeline/.runtime/events.jsonl`. There are two ways to watch one.
 
 **The hosted dashboard at [ai-pipeline.dev](https://ai-pipeline.dev)** is the UI.
-Run `pipeline cloud connect` once and every run — from `$/pipeline:run`,
-`$/pipeline:dispatch`, `pipeline drive`, or cloud dispatch — streams there: run
+Run `pipeline cloud connect` once and every run — from `$pipeline:run`,
+`$pipeline:dispatch`, `pipeline drive --executor codex-cli`, or cloud dispatch — streams there: run
 list, step tree, timings, token counts and cost, tool-call and failure counts,
 the parked-question surface, and per-run analytics. It is installable as a web
 app, so it works from a phone without exposing anything on your network. What it
@@ -1031,15 +1027,15 @@ field, and [Connecting to the cloud](docs/cloud-connect.md).
 **`pipeline logs` is the offline path** and needs no account, no daemon and no
 network — see the next section. `pipeline logs -f` tails the same journal live,
 and `pipeline logs --chat <run-id>` renders a finished `driver` run's Codex CLI
-transcript in the terminal, which is the post-mortem a `pipeline drive` run
+transcript in the terminal, which is the post-mortem a Codex `pipeline drive --executor codex-cli` run
 otherwise leaves scattered across files nobody opens.
 
 > **Historical note.** Earlier versions shipped a *local* browser dashboard
-> (`$/pipeline:ui`, a background Bun daemon serving a React app). It was deleted:
+> (`$pipeline:ui`, a background Bun daemon serving a React app). It was deleted:
 > the hosted dashboard is already better at the shared 90%, and the two local
 > capabilities without a cloud equivalent were moved into the CLI as
 > `pipeline logs --chat` and `pipeline fix` before it went. `pipeline ui`,
-> `$/pipeline:ui`, the daemon and its `SessionStart` launcher no longer exist.
+> `$pipeline:ui`, the daemon and its `SessionStart` launcher no longer exist.
 
 ### Terminal logs — `pipeline logs`
 
@@ -1051,15 +1047,15 @@ pipeline logs --follow
 ```
 
 ```
-08:00:01 ▶ pipeline.started   abcdef12  build-cli [opus]
-08:00:02 → iteration.started  abcdef12  #1 01-scaffold.md [opus]
+08:00:01 ▶ pipeline.started   abcdef12  build-cli [gpt-5.6-sol]
+08:00:02 → iteration.started  abcdef12  #1 01-scaffold.md [gpt-5.6-sol]
 08:00:03 · tool.called        abcdef12  Bash
 08:00:05 ✓ pipeline.completed abcdef12  build-cli
 ```
 
 Flags: `-f`/`--follow` to stream live, `--tail <n>` (default 20) for the initial backlog, `--all` for the whole journal, `--json` for raw JSON lines, `--no-color`, and `--project <path>` to point at a project other than the cwd. It is **read-only** — it starts no background process and writes nothing — so it works with or without a cloud account. Stop it with Ctrl-C.
 
-`pipeline logs --chat <run-id>` is the other half: it renders that run's Codex CLI transcript(s) in the terminal — the post-mortem for a `driver` (`pipeline drive`) run, whose steps execute as separate processes and whose subagent transcripts otherwise become files nobody opens. It reads only what is already on your disk and uploads nothing.
+`pipeline logs --chat <run-id>` is the other half: it renders that run's Codex CLI transcript(s) in the terminal — the post-mortem for a `driver` (`pipeline drive --executor codex-cli`) run, whose steps execute as separate processes and whose subagent transcripts otherwise become files nobody opens. It reads only what is already on your disk and uploads nothing.
 
 ### The journal/analytics master switch — `PIPELINE_JOURNAL_ENABLED`
 
@@ -1089,7 +1085,7 @@ Two things it does *not* do:
   so Codex CLI still launches each hook's instantly-exiting process. To remove
   even that, disable the plugin.
 - **It does not silence `pipeline logs`.** The core run lifecycle is journalled
-  by `$/pipeline:run` regardless, so the terminal view keeps working.
+  by `$pipeline:run` regardless, so the terminal view keeps working.
 
 > Performance note: `SubagentStop` only fires the hook for the `pipeline-manager` subagent (via a `matcher`), so the dozens of other subagent stops in a run no longer spawn a hook process.
 
@@ -1119,12 +1115,12 @@ This switch is **orthogonal** to `PIPELINE_STATS_ENABLED` — the separate local
 
 The plugin also ships a `UserPromptSubmit` hook that surfaces a matching
 pipeline for whatever you just typed — deterministic auto-discovery with **zero
-always-loaded context**. It runs the same BM25 matcher as `$/pipeline:find` and
-`$/pipeline:dispatch` against your prompt.
+always-loaded context**. It runs the same BM25 matcher as `$pipeline:find` and
+`$pipeline:dispatch` against your prompt.
 
 It speaks **only on a confident single match** — exactly one candidate, or a top
-score at least 2× the runner-up, the same threshold `$/pipeline:dispatch` uses —
-and then injects one line suggesting `$/pipeline:run` or `$/pipeline:dispatch`. On
+score at least 2× the runner-up, the same threshold `$pipeline:dispatch` uses —
+and then injects one line suggesting `$pipeline:run` or `$pipeline:dispatch`. On
 no match or an ambiguous one it stays completely silent. It never blocks or
 modifies your prompt.
 
@@ -1135,7 +1131,7 @@ Unlike the journal/analytics system (on by default), this hook is **OFF BY DEFAU
 { "env": { "PIPELINE_PROMPT_MATCH_ENABLED": "1" } }
 ```
 
-When enabled, it still skips silently for slash commands, prompts shorter than 20 characters, and projects with no `.pipeline/` directory — so it only ever speaks up when a free-form task genuinely looks like one of your pre-authored pipelines.
+When enabled, it still skips silently for explicit skill/plugin commands, prompts shorter than 20 characters, and projects with no `.pipeline/` directory — so it only ever speaks up when a free-form task genuinely looks like one of your pre-authored pipelines.
 
 ### Environment variables (reference)
 
@@ -1154,7 +1150,7 @@ Everything the plugin reads from the environment, in one place. Set the per-proj
 | `PIPELINE_CLOUD_API` | `https://api.ai-pipeline.dev` | Overrides the control-plane API base used by `pipeline cloud connect` and the department notifier. |
 | `PIPELINE_CLOUD_HOME` | platform default (`%APPDATA%\pipeline-codex` on Windows, `$XDG_CONFIG_HOME/pipeline-codex` / `~/.config/pipeline-codex` elsewhere) | Overrides the per-user directory holding the cloud credential store and the department notifier's journal/lock files. |
 | `PIPELINE_MACHINE_TOKEN` | unset | The no-human path for `pipeline cloud connect` (bots, CI, autonomous agents): an `aip_m_<client-id>.<secret>` machine credential from your dashboard's Settings → Machine credentials. Its presence suppresses every prompt and browser/device-code attempt — pass `--org <slug>` too (a machine credential has no discoverable org). `--machine-token <token>` is the flag equivalent; the env var is preferred since argv is world-readable in `ps`. Combining either with `--device` is a usage error (exit 2). |
-| `PIPELINE_DRIVE_EXECUTOR_CMD` | `codex exec --agent pipeline:step-executor --model {model} --effort {effort} --permission-mode {permissions} --session-id {session} --add-dir {record_dir} --plugin-dir {plugin_dir} --output-format stream-json --verbose --json-schema {schema}` | Overrides the command template the EXPERIMENTAL `driver` runner (`pipeline drive`) spawns per step. Whitespace-split; tokens `{model}` / `{effort}` / `{permissions}` / `{session}` / `{record_dir}` / `{plugin_dir}` / `{schema}` are substituted (a flag+token pair is dropped when the token has no value; on an answer/crash resume the flag before `{session}` becomes `--resume`); the step prompt always arrives on stdin. `{plugin_dir}` (CODEX_PLUGIN_ROOT) keeps `--agent pipeline:step-executor` resolvable once `-p` defaults to `--bare`; unlike `{session}`/`{record_dir}` it is never appended to a template that omits it, so a pre-existing override is unaffected. Equivalent to `--executor-cmd`. |
+| `PIPELINE_DRIVE_EXECUTOR_CMD` | `codex exec --json --skip-git-repo-check --model {model} -c model_reasoning_effort={effort} --sandbox {permissions} --add-dir {record_dir}` | Overrides the command template the EXPERIMENTAL Codex process driver (`pipeline drive --executor codex-cli`) spawns per step. Whitespace-split; unresolved flag/value pairs are dropped, and the step prompt arrives on stdin. Equivalent to `--executor-cmd`. |
 | `PIPELINE_HOOK_TIMEOUT_MS` | per-hook (600 000 create/finalize, 300 000 destroy) | Overrides the external-isolation worktree-hook timeout (positive integer, milliseconds). Mostly useful for testing hooks. |
 | `PIPELINE_WORKTREE_SCOPED` | on | Worktree-scoped pipeline I/O for `isolation: run` runs (the run plans from, and self-improves into, the run worktree's pipeline copy — committed state only). `0`/`false` restores the legacy main-scoped reads. FROZEN per run into `next.json` at init — a mid-run flip never mixes path models within one run. |
 | `PIPELINE_GIT_BIN` / `PIPELINE_GH_BIN` | `git` / `gh` from PATH | Override which `git`/`gh` binaries the CLI's guarded git operations (`pipeline submodule bump`) invoke. |
@@ -1162,7 +1158,7 @@ Everything the plugin reads from the environment, in one place. Set the per-proj
 
 **Hook contract (set BY the plugin, read by your hook scripts):** every `PIPELINE_WT_*` variable passed to the `worktree-create` / `worktree-finalize` / `worktree-destroy` hooks is specified in [`docs/worktree-hook-contract.md`](docs/worktree-hook-contract.md) — that contract is frozen; write hooks against it, never set those variables yourself.
 
-**Internal (do not set):** `PIPELINE_RUN_ID` / `PIPELINE_PARENT_RUN_ID` are run-correlation plumbing between `$/pipeline:run` and the analytics hooks; setting them manually mis-attributes events. `PIPELINE_STATS_RUNNER` is set by `pipeline drive` to tag `driver` runs in the measurement files.
+**Internal (do not set):** `PIPELINE_RUN_ID` / `PIPELINE_PARENT_RUN_ID` are run-correlation plumbing between `$pipeline:run` and the analytics hooks; setting them manually mis-attributes events. `PIPELINE_STATS_RUNNER` is set by `pipeline drive` to tag `driver` runs in the measurement files.
 
 ## Departments (`/mcp` + background notifier)
 
@@ -1212,8 +1208,8 @@ Once connected, delegating work is one line in natural language — "have the Un
 > it — so to Codex CLI the renamed entry is a *new* server with no grant. Run
 > `/mcp` and approve once more; nothing else about the connection changes.
 >
-> If you carry the old name in a `permissions.allow` entry, a skill's
-> `allowed-tools`, a subagent's `tools` list, or a hook matcher, update those too.
+> If you carry the old name in a local MCP permission rule or hook matcher,
+> update that reference too.
 
 ### Publishing one of your own — the `pipeline department` commands
 
@@ -1232,8 +1228,8 @@ Two things worth knowing before you author one:
 
 - **`serve` reports only what it observed.** It prints `online` when the control plane says so, `registered — not serving` with the reason and the fix when this machine has no live supervisor, and `could not confirm it is live` when neither could be read. It does not assert success it hasn't checked.
 - **The declared engine has to be one `pipeline-runner` actually ships a module
-  for.** The scaffold defaults to `claude-code`. When no module exists for the
-  declared engine, `serve` refuses and registers nothing rather than publishing a
+  for.** For a Codex-authored pipeline department, select `--engine pipeline`.
+  When no module exists for the declared engine, `serve` refuses and registers nothing rather than publishing a
   department that could not execute a single task — and `validate`'s
   engine-support line says the same thing before you get that far. One predicate
   sits behind both, so they cannot disagree.
@@ -1278,13 +1274,13 @@ Opt out with `PIPELINE_DEPARTMENT_NOTIFY_ENABLED=0` (same falsy-value convention
 If an executor halts on a blocker, fix the underlying issue, then re-invoke:
 
 ```
-$/pipeline:run <absolute-path>/.pipeline/<pipeline-name>/steps/<NN-halted-iteration>.md
+$pipeline:run <absolute-path>/.pipeline/<pipeline-name>/steps/<NN-halted-iteration>.md
 ```
 
 Iterations are designed to be idempotent, so re-running from the halted step is safe.
 
 ## Tips
 
-- Start with a clear one-sentence end-state when calling `$/pipeline:design`. Vague goals produce vague pipelines.
+- Start with a clear one-sentence end-state when calling `$pipeline:design`. Vague goals produce vague pipelines.
 - Prefer flat linear chains. Nest only when an iteration is itself a mini-pipeline.
 - Pipelines double as a knowledge base: after completion, the folder documents *what was done and why* and can be read by humans or future agents.
