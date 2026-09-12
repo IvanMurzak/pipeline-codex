@@ -1,0 +1,86 @@
+skills/run/references/session-loop.md
+  s_d72c3e29288e6e::t_33aad36cdef3eb 148-151,204-205
+  s_d72c3e29288e6e::t_08db90a39f3d39 3
+  s_d72c3e29288e6e::t_559421729e04fd 216-218,243-245,269-270,272,278
+skills/clone/SKILL.md
+  s_d72c3e29288e6e::t_b1af164086bc60 27
+  s_d72c3e29288e6e::t_08db90a39f3d39 38-39,58,76
+agents/step-executor.toml
+  s_d72c3e29288e6e::t_08db90a39f3d39 6,10,36,63,91,272,293,312,318,421,423
+  s_d72c3e29288e6e::t_dcbfba510f0802 14,18,254,256,260,265-266,325,329,331
+  s_d72c3e29288e6e::t_b1af164086bc60 185
+.codex-plugin/plugin.json
+  s_d72c3e29288e6e::t_8c7b3fd45bb8be 3,11-17
+skills/design/references/authoring-protocol.md
+  s_d72c3e29288e6e::t_8772256721753f 16,441,456
+  s_d72c3e29288e6e::t_abb59e29534492 313,684
+  s_d72c3e29288e6e::t_08db90a39f3d39 15,18,109,674,691
+.github/workflows/validate.yml
+  s_d72c3e29288e6e::t_a490018655f5ff 13-16,52-54
+skills/run/SKILL.md
+  s_d72c3e29288e6e::t_b633ec8ec4ad31 62
+  s_d72c3e29288e6e::t_68a62e659753df 73
+  s_d72c3e29288e6e::t_08db90a39f3d39 3,87,204,209,215,281
+  s_d72c3e29288e6e::t_abb59e29534492 69
+  s_d72c3e29288e6e::t_13e222dd13fb8c 34-35,75,77,79,83,108,139,150,250,252
+skills/dispatch/SKILL.md
+  s_d72c3e29288e6e::t_08db90a39f3d39 3,10,28,36,44,91,138,155,183
+  s_d72c3e29288e6e::t_8772256721753f 118
+  s_d72c3e29288e6e::t_b1af164086bc60 17-18,20,34,95,123,177
+skills/design/SKILL.md
+  s_d72c3e29288e6e::t_08db90a39f3d39 11,27,49
+agents/pipeline-disambiguator.toml
+  s_d72c3e29288e6e::t_b1af164086bc60 9,96
+  s_d72c3e29288e6e::t_8c7b3fd45bb8be 3-4
+  s_d72c3e29288e6e::t_08db90a39f3d39 2,13,88
+tests/test_validate_plugin.py
+  s_d72c3e29288e6e::t_68a62e659753df 53-59
+  s_d72c3e29288e6e::t_a490018655f5ff 1-52,60-62
+agents/pipeline-script-creator.toml
+  s_d72c3e29288e6e::t_8c7b3fd45bb8be 3-4
+  s_d72c3e29288e6e::t_abb59e29534492 61
+agents/pipeline-improver.toml
+  s_d72c3e29288e6e::t_abb59e29534492 26,114
+  s_d72c3e29288e6e::t_08db90a39f3d39 251
+  s_d72c3e29288e6e::t_8c7b3fd45bb8be 3-4
+README.md
+  s_d72c3e29288e6e::t_9fa18aed2ec388 80-82,153,208,265,269,345,428,462,539,542,591,1050-1051,1231-1232
+  s_d72c3e29288e6e::t_08db90a39f3d39 223,328,558-559,704,738,762,766,772-773,784,924,1017-1018,1034,1038,1088,1118-1119,1122-1123,1161,1277,1284
+  s_d72c3e29288e6e::t_b633ec8ec4ad31 249-250,831-835,844,1153,1211-1212
+  s_d72c3e29288e6e::t_fa0a84ed97a85e 3-4,72-73
+  s_d72c3e29288e6e::t_cf2d33665b41e7 312,324,730,1030,1058
+  s_d72c3e29288e6e::t_644413023eac73 310-311,447,606,626,769,1003,1006
+  s_d72c3e29288e6e::t_543ed6eef9d4e3 19,26,190,1134
+skills/find/SKILL.md
+  s_d72c3e29288e6e::t_08db90a39f3d39 3,10,21,31,83,92,105,108
+skills/optimize/SKILL.md
+  s_d72c3e29288e6e::t_08db90a39f3d39 79
+.gitignore
+  s_d72c3e29288e6e::t_2e974e4aa00bee 1-2
+agents/pipeline-manager.toml
+  s_d72c3e29288e6e::t_08db90a39f3d39 2,6,10,276,338
+  s_d72c3e29288e6e::t_be19dde5efab63 232,259,330-332,335
+  s_d72c3e29288e6e::t_2d794061a9d07b 19,88-90,92,98,146,190,196
+  s_d72c3e29288e6e::t_b1af164086bc60 269
+.github/workflows/release.yml
+  s_d72c3e29288e6e::t_30190abac8b6e9 7
+.github/scripts/validate_plugin.py
+  s_d72c3e29288e6e::t_a490018655f5ff 1-15,17-126,129-156
+  s_d72c3e29288e6e::t_68a62e659753df 16,127-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4b7cf07ad6a724ebb88a62f2a4d3aea56dc5e4f7",
+  "prompts": {},
+  "sessions": {
+    "s_d72c3e29288e6e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0959f-052e-7873-8ba3-c850247114e6",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
