@@ -55,6 +55,30 @@ The install ends with a pipeline that has already run on your machine.
 Restart Codex CLI afterwards — a running session does not pick up a newly
 installed plugin.
 
+### Upgrade
+
+Publishing a new `pipeline-codex` release does not automatically change the
+version installed from the marketplace. The separate
+[`pipeline-codex-marketplace`](https://github.com/IvanMurzak/pipeline-codex-marketplace)
+repository must first point the `pipeline` entry in
+`.agents/plugins/marketplace.json` at the new release tag. Commit and push that
+change, then wait for its **Validate marketplace** workflow to pass.
+
+After the marketplace update is green, refresh its local snapshot and
+reinstall:
+
+```powershell
+codex plugin marketplace upgrade pipeline
+codex plugin remove pipeline@pipeline
+codex plugin add pipeline@pipeline
+```
+
+The final command prints the installed plugin root; its last path component
+should be the new version. Restart Codex CLI so a new session loads it. On
+Windows, close running Codex sessions before upgrading if the command reports
+that the marketplace directory is being used by another process (`os error
+32`).
+
 **No account wanted?** `pipeline init --local` does all of the above except the
 cloud. No browser, no account, nothing sent anywhere.
 
