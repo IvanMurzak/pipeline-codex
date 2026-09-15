@@ -1,0 +1,54 @@
+.codex-plugin/plugin.json
+  s_50329d799ae552::t_00e47d8f12f218 3
+skills/run/references/roles/pipeline-improver.md
+  s_50329d799ae552::t_1e79776cf20c51 1-111,113-272
+  s_50329d799ae552::t_4d942ec9dcd8c4 112
+skills/run/references/roles/pipeline-script-creator.md
+  s_50329d799ae552::t_1e79776cf20c51 1-320
+skills/run/references/roles/pipeline-disambiguator.md
+  s_50329d799ae552::t_1e79776cf20c51 1-6,8-97
+  s_50329d799ae552::t_4d942ec9dcd8c4 7
+skills/run/SKILL.md
+  s_50329d799ae552::t_d7daaaf153e255 139-140,143-144,257-267
+  s_50329d799ae552::t_e5e02e0e5e91c8 141-142
+skills/run/references/roles/pipeline-manager.md
+  s_50329d799ae552::t_1e79776cf20c51 1-4,25-107,109-209,211-215,217-251,253-278,280-288,290-349,351-354,356-358
+  s_50329d799ae552::t_0e971736cddedf 9-10
+  s_50329d799ae552::t_d7daaaf153e255 14-16,108,210,216,252,279
+  s_50329d799ae552::t_1a72b5641873ae 5-8,11-13,19-24,289,350,355
+  s_50329d799ae552::t_e5e02e0e5e91c8 17-18
+skills/design/references/authoring-protocol.md
+  s_50329d799ae552::t_bb1b500ca0bc99 16,313
+.github/workflows/validate.yml
+  s_50329d799ae552::t_9b6133f18d3abf 52-55
+tests/test_validate_plugin.py
+  s_50329d799ae552::t_d964b866d18ec6 36,38-39,41,43,45-46,48
+.github/scripts/validate_plugin.py
+  s_50329d799ae552::t_27cbeae0f29332 9,16,35,42-44,50-57,59-62
+README.md
+  s_50329d799ae552::t_77af424a4f67e1 224-227,474,633-635,655-657,1037
+skills/dispatch/SKILL.md
+  s_50329d799ae552::t_bbe82c402a38c1 17,34,118-124
+skills/run/references/roles/step-executor.md
+  s_50329d799ae552::t_1e79776cf20c51 1-18,20-185,187-424
+  s_50329d799ae552::t_4d942ec9dcd8c4 19,186
+skills/run/references/session-loop.md
+  s_50329d799ae552::t_bb1b500ca0bc99 148-150,245-249,273-277,285
+  s_50329d799ae552::t_e5e02e0e5e91c8 151-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ce914cd5c26370c00ddd6075cd2e55bfb4419a75",
+  "prompts": {},
+  "sessions": {
+    "s_50329d799ae552": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0a49f-1a55-7041-a4ba-349972939306",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ivan Murzak <Ivan.D.Murzak@gmail.com>"
+    }
+  }
+}
