@@ -49,7 +49,8 @@ jobs:
               codex plugin add pipeline@pipeline --json
               codex plugin list --json > /tmp/plugins.json
               node -e "const data = require(\"/tmp/plugins.json\"); if (!data.installed.some(plugin => plugin.pluginId === \"pipeline@pipeline\" && plugin.installed)) process.exit(1)"
-              codex debug prompt-input "Use the pipeline-manager custom agent." > /tmp/prompt.json
-              grep -q "pipeline-manager" /tmp/prompt.json
-              grep -q "step-executor" /tmp/prompt.json
+              codex debug prompt-input "Use the pipeline:run skill." > /tmp/prompt.json
+              grep -q "pipeline:run" /tmp/prompt.json
+              test -s /tmp/marketplace/plugins/pipeline/skills/run/references/roles/pipeline-manager.md
+              test -s /tmp/marketplace/plugins/pipeline/skills/run/references/roles/step-executor.md
             '

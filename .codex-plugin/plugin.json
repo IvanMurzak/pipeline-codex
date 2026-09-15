@@ -1,6 +1,6 @@
 {
   "name": "pipeline",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Plan and run deterministic, file-based AI pipelines from Codex.",
   "author": {
     "name": "IvanMurzak"
@@ -8,13 +8,6 @@
   "repository": "https://github.com/IvanMurzak/pipeline-codex",
   "license": "MIT",
   "skills": "./skills/",
-  "agents": [
-    "./agents/pipeline-disambiguator.toml",
-    "./agents/pipeline-improver.toml",
-    "./agents/pipeline-manager.toml",
-    "./agents/pipeline-script-creator.toml",
-    "./agents/step-executor.toml"
-  ],
   "interface": {
     "displayName": "Pipeline",
     "shortDescription": "Design and run durable AI pipelines.",

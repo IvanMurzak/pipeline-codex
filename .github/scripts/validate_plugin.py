@@ -6,28 +6,21 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import tomllib
-from pathlib import Path, PurePosixPath
-from typing import Any
+from pathlib import Path
 
 
 SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 FORBIDDEN_INSTRUCTION_PATTERNS = {
     "non-Codex vendor branding": re.compile(r"\b(?:claude|anthropic)\b", re.IGNORECASE),
     "Claude Code agent selector": re.compile(r"\bsubagent_type\b", re.IGNORECASE),
+    "plugin custom-agent selector": re.compile(r"\bagent_type\b", re.IGNORECASE),
     "Claude Code Agent tool": re.compile(r"\bAgent tool\b", re.IGNORECASE),
     "external Claude Code runner": re.compile(r"\bclaude\s+-p\b", re.IGNORECASE),
     "Claude Code background-spawn argument": re.compile(r"\brun_in_background\b", re.IGNORECASE),
     "Claude Code project instructions": re.compile(r"\bCLAUDE\.md\b", re.IGNORECASE),
     "Claude-only skill frontmatter": re.compile(r"(?m)^allowed-tools\s*:"),
-    "stale Markdown custom-agent path": re.compile(r"agents/[a-z0-9-]+\.md\b", re.IGNORECASE),
     "Claude model id": re.compile(r"\bclaude-(?:haiku|sonnet|opus|fable)[a-z0-9.-]*\b", re.IGNORECASE),
 }
-REQUIRED_AGENT_KEYS = {"name", "description", "developer_instructions"}
-LEGACY_AGENT_KEYS = {"tools", "color"}
-VALID_EFFORTS = {"low", "medium", "high", "xhigh", "max"}
-
-
 def validate_plugin(plugin_root: Path) -> list[str]:
     root = plugin_root.resolve()
     errors: list[str] = []
@@ -39,68 +32,34 @@ def validate_plugin(plugin_root: Path) -> list[str]:
 
     if not isinstance(manifest, dict):
         return [".codex-plugin/plugin.json must contain an object"]
-    for key in ("name", "version", "description", "skills", "interface", "agents"):
+    for key in ("name", "version", "description", "skills", "interface"):
         if not manifest.get(key):
             errors.append(f"plugin.json is missing `{key}`")
     version = manifest.get("version")
     if not isinstance(version, str) or SEMVER_RE.fullmatch(version) is None:
         errors.append("plugin.json `version` must be strict semver")
 
-    errors.extend(validate_agents(root, manifest.get("agents")))
+    if "agents" in manifest:
+        errors.append("plugin.json must not declare unsupported `agents`")
+    errors.extend(validate_roles(root))
     errors.extend(validate_skills(root))
     errors.extend(validate_instruction_surfaces(root))
     return errors
 
 
-def validate_agents(root: Path, entries: Any) -> list[str]:
+def validate_roles(root: Path) -> list[str]:
+    names = (
+        "pipeline-disambiguator",
+        "pipeline-improver",
+        "pipeline-manager",
+        "pipeline-script-creator",
+        "step-executor",
+    )
     errors: list[str] = []
-    if not isinstance(entries, list) or not entries:
-        return ["plugin.json `agents` must be a non-empty array"]
-
-    registered: set[Path] = set()
-    names: set[str] = set()
-    for index, raw_path in enumerate(entries):
-        label = f"agents[{index}]"
-        if not isinstance(raw_path, str) or not raw_path.strip():
-            errors.append(f"{label} must be a non-empty relative path")
-            continue
-        candidate = PurePosixPath(raw_path.replace("\\", "/"))
-        if candidate.is_absolute() or any(part in {"", ".", ".."} for part in candidate.parts):
-            errors.append(f"{label} must stay inside the plugin")
-            continue
-        path = (root / candidate.as_posix()).resolve()
-        if not path.is_relative_to(root) or path.suffix != ".toml" or not path.is_file():
-            errors.append(f"{label} must point to an existing TOML file inside the plugin")
-            continue
-        registered.add(path)
-        try:
-            payload = tomllib.loads(path.read_text(encoding="utf-8"))
-        except (OSError, tomllib.TOMLDecodeError) as exc:
-            errors.append(f"{path.relative_to(root)} is not valid TOML: {exc}")
-            continue
-        missing = sorted(key for key in REQUIRED_AGENT_KEYS if not isinstance(payload.get(key), str) or not payload[key].strip())
-        if missing:
-            errors.append(f"{path.relative_to(root)} is missing non-empty keys: {', '.join(missing)}")
-        legacy = sorted(LEGACY_AGENT_KEYS & payload.keys())
-        if legacy:
-            errors.append(f"{path.relative_to(root)} contains Claude-style keys: {', '.join(legacy)}")
-        name = payload.get("name")
-        if isinstance(name, str):
-            if name in names:
-                errors.append(f"duplicate agent name `{name}`")
-            names.add(name)
-        model = payload.get("model")
-        if model is not None and (not isinstance(model, str) or not model.startswith("gpt-")):
-            errors.append(f"{path.relative_to(root)} `model` must be a Codex gpt-* id")
-        effort = payload.get("model_reasoning_effort")
-        if effort is not None and effort not in VALID_EFFORTS:
-            errors.append(f"{path.relative_to(root)} has invalid model_reasoning_effort")
-
-    discovered = {path.resolve() for path in (root / "agents").glob("*.toml")}
-    for path in sorted(discovered - registered):
-        errors.append(f"unregistered custom agent: {path.relative_to(root)}")
-    for path in sorted(registered - discovered):
-        errors.append(f"registered agent is outside agents/: {path.relative_to(root)}")
+    for name in names:
+        path = root / "skills" / "run" / "references" / "roles" / f"{name}.md"
+        if not path.is_file() or not path.read_text(encoding="utf-8").strip():
+            errors.append(f"missing bundled role brief: {path.relative_to(root)}")
     return errors
 
 
@@ -126,7 +85,6 @@ def validate_instruction_surfaces(root: Path) -> list[str]:
     errors: list[str] = []
     paths = [root / "README.md"]
     paths.extend(sorted((root / "skills").glob("**/*.md")))
-    paths.extend(sorted((root / "agents").glob("*.toml")))
     saw_spawn_agent = False
     for path in paths:
         contents = path.read_text(encoding="utf-8")

@@ -14,7 +14,7 @@ Given a task description (or GitHub issue ref) in `$1`, select the best-matching
 This skill is engineered so most calls cost near-zero LLM tokens. Each call walks down a ladder; you stop at the first tier that produces a usable answer.
 
 1. **Deterministic match (free).** Always runs first. Shells out to the `pipeline match` command that scores manifests with Okapi BM25 over the positive corpus and hard-filters on `Scope.Out`. Returns ranked JSON. ~zero LLM tokens. Most tasks resolve here.
-2. **LLM disambiguation (low cost).** Only when the matcher returns 2+ candidates with **comparable** scores (top1/top2 ratio < 2.0). Spawns the `pipeline-disambiguator` custom agent (`gpt-5.6-luna`) with the task text and the 2–5 ambiguous candidates' manifests inlined. Tokens scale with ambiguity, not with project size.
+2. **LLM disambiguation (low cost).** Only when the matcher returns 2+ candidates with **comparable** scores (top1/top2 ratio < 2.0). Spawns a fresh subagent using the bundled `pipeline-disambiguator` role brief (`gpt-5.6-luna` when available) with the task text and the 2–5 ambiguous candidates' manifests inlined. Tokens scale with ambiguity, not with project size.
 3. **LLM chain detection (full session model).** Only when the matcher returns 0 candidates AND the task contains chain phrasing (`then`, `after that`, `followed by`, etc.). Loads every project manifest into your context and reasons over them to produce a chain. This is the only path that costs what dispatch used to cost on every call before the refactor — now it runs maybe 5% of the time.
 
 The 80% case (one pipeline obviously matches): tier 1 only, no LLM tokens. The 15% case (ambiguous match): tier 1 + the low-cost Codex tier 2. The 5% case (chain across pipelines): tier 1 + tier 3, full reasoning. Average token cost per dispatch drops by ~90% versus the pre-refactor design.
@@ -31,7 +31,7 @@ The 80% case (one pipeline obviously matches): tier 1 only, no LLM tokens. The 1
 ## Token discipline
 
 - **Never `Read` `PIPELINE.md` files yourself in tier 1.** The matcher reads them inside its own process; you only consume the small JSON result it prints to stdout.
-- **In tier 2, do NOT load all manifests into your context.** Read only the 2–5 ambiguous candidates' manifests (each ≤ 300 tokens) and inline them into the disambiguator's prompt. The disambiguator runs on its pinned small Codex model and reasons over them.
+- **In tier 2, do NOT load all manifests into your context.** Read only the 2–5 ambiguous candidates' manifests (each ≤ 300 tokens) and inline them into the disambiguator's prompt. Request the small Codex model when the spawn interface supports it.
 - **Tier 3 is the only path where you load all manifests.** Save it for genuine chain detection — never as a generic fallback when the matcher gave a usable answer.
 - **Never `Read` iteration files (`steps/**/*.md`).** Hand the path to `$pipeline:run`; let the executor read.
 
@@ -115,7 +115,13 @@ Build the prompt. For each candidate in `C[:5]`, read its manifest content via `
 ...
 ```
 
-Call Codex's native `spawn_agent` with `agent_type: "pipeline-disambiguator"` and `fork_turns: "none"`, passing the composed prompt as the entire task. Do NOT add other instructions — the registered custom agent's developer instructions contain its protocol. Wait for it with `wait_agent` and parse its final result.
+Resolve `../run/references/roles/pipeline-disambiguator.md` relative to this
+installed SKILL.md. Call Codex's native `spawn_agent` without an agent type,
+with task name `pipeline_disambiguator` and `fork_turns: "none"`. Start the task
+message with `Read <absolute role path> fully before acting; it defines your
+protocol.`, followed by the composed prompt. Request `gpt-5.6-luna` and low
+effort when supported; otherwise inherit and report the unapplied hint. Wait
+for it with `wait_agent` and parse its final result.
 
 Parse the agent's `Disambiguation Result`:
 - `chosen.first_iteration` is set, `chained_after` is null → run that single pipeline (step 5).

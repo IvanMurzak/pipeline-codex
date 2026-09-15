@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
 import shutil
 import tempfile
 import unittest
@@ -34,21 +33,19 @@ class PluginValidationTests(unittest.TestCase):
 
         self.assertTrue(any("agent selector" in error for error in self.validate_mutation(mutate)))
 
-    def test_rejects_unregistered_agent(self) -> None:
+    def test_rejects_missing_role_brief(self) -> None:
         def mutate(root: Path) -> None:
-            path = root / ".codex-plugin" / "plugin.json"
-            manifest = json.loads(path.read_text(encoding="utf-8"))
-            manifest["agents"].pop()
-            path.write_text(json.dumps(manifest), encoding="utf-8")
+            path = root / "skills" / "run" / "references" / "roles" / "step-executor.md"
+            path.unlink()
 
-        self.assertTrue(any("unregistered custom agent" in error for error in self.validate_mutation(mutate)))
+        self.assertTrue(any("missing bundled role brief" in error for error in self.validate_mutation(mutate)))
 
-    def test_rejects_claude_agent_toml_keys(self) -> None:
+    def test_rejects_plugin_agent_selector(self) -> None:
         def mutate(root: Path) -> None:
-            path = root / "agents" / "step-executor.toml"
-            path.write_text(path.read_text(encoding="utf-8") + '\ntools = ["Agent"]\n', encoding="utf-8")
+            path = root / "skills" / "run" / "SKILL.md"
+            path.write_text(path.read_text(encoding="utf-8") + "\nagent_type\n", encoding="utf-8")
 
-        self.assertTrue(any("Claude-style keys" in error for error in self.validate_mutation(mutate)))
+        self.assertTrue(any("plugin custom-agent selector" in error for error in self.validate_mutation(mutate)))
 
     def test_rejects_non_codex_branding_in_readme(self) -> None:
         def mutate(root: Path) -> None:

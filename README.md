@@ -221,7 +221,10 @@ and the Codex build of this plugin in [`IvanMurzak/pipeline-codex`](https://gith
 | `$pipeline:dispatch <task>` | Picks the right pipeline for a task and runs it without asking. |
 | `$pipeline:find <task>` | The same matcher with no model and no auto-run: ranked candidates, scores, matched terms, and every exclusion with its reason. Takes a GitHub issue URL, `owner/repo#N`, or a bare issue number. |
 
-**Five subagents**, normally reached through those chains rather than by hand.
+**Five bundled role briefs**, used by fresh Codex subagents during those chains.
+The plugin installs skills; it does not register custom agents. Each spawn
+passes the absolute path to its role brief, and the child reads it in its own
+context.
 
 | Agent | Role |
 |---|---|
@@ -468,7 +471,7 @@ If `$pipeline:find` returns no candidates and the excluded list doesn't reveal a
 1. **Re-read your task wording.** Pipelines match on terminology that appears in `End State` / `Scope.In` / pipeline name. If you describe a "schema migration" but the relevant pipeline calls it "database evolution", your wording and the matcher's vocabulary don't overlap.
 2. **Try `--neg-threshold 2`** (you can pass `--` flags after the task in the command if you need to). Default is 1, which is strict. Raising it to 2 means "only exclude if at least 2 task tokens overlap with `Scope.Out`."
 3. **Author a new pipeline** with `$pipeline:design <goal>` if no existing pipeline really covers the task and the workflow will repeat.
-4. **Fall back to a regular Codex subagent** (`spawn_agent` with a suitable registered agent type, or a generic worker) for genuinely one-shot work — pipelines are for *repeatable* workflows.
+4. **Fall back to a regular Codex subagent** (`spawn_agent` with a bounded task message) for genuinely one-shot work — pipelines are for *repeatable* workflows.
 
 ### Day-N — letting pipelines improve themselves
 
@@ -627,7 +630,9 @@ Boundaries:
 - Tier-1: one improvement brief per iteration, max. Tier-2: one batch improver pass per run, run once at the end (a no-op when no problems were journaled).
 - The `.feedback/` tree is gitignored by a self-contained `.feedback/.gitignore` (a single `*`), so feedback never lands in your commits.
 
-You can also invoke the registered `pipeline-improver` custom agent directly through `spawn_agent` when you spot a pipeline-doc flaw yourself.
+You can also spawn a regular Codex subagent with the bundled
+`skills/run/references/roles/pipeline-improver.md` brief when you spot a
+pipeline-doc flaw yourself.
 
 ## Token-cheap iterations via script extraction
 
@@ -647,7 +652,9 @@ Boundaries:
 - Stdlib only by default. Cross-platform (`pathlib`, `tempfile`, no POSIX shell syntax). Argparse-driven CLI with `--help`. Idempotent.
 - The script-creator refuses extractions that would require agent judgment, deletions of `Success Criteria`, renumbering, or breaking `Next` links. It is a leaf agent — it does not loop back to the executor or improver.
 
-You can also invoke the registered `pipeline-script-creator` custom agent directly through `spawn_agent` when you've drafted a structured `script_creation_brief` yourself and want to apply it manually.
+You can also spawn a regular Codex subagent with the bundled
+`skills/run/references/roles/pipeline-script-creator.md` brief when you've
+drafted a structured `script_creation_brief` yourself.
 
 ## Script steps (zero-token steps)
 
@@ -1027,7 +1034,7 @@ git forever. It never touches a branch outside that pattern.
 | Parallel-step worktrees       | Available through the process driver; native manager subagents share cwd and reject runtime worktree isolation |
 | Per-pipeline scripts          | `<your-project>/.pipeline/<pipeline-name>/scripts/*.py` |
 | Per-run feedback (Tier-2)     | `<your-project>/.pipeline/<pipeline-name>/.feedback/<run_id>/` (gitignored, transient — created at run start, deleted after the end-of-run retrospective) |
-| Plugin agents                 | `${CODEX_PLUGIN_ROOT}/agents/*.toml` (read-only)   |
+| Plugin role briefs            | `<installed-plugin>/skills/run/references/roles/*.md` (read-only) |
 | Plugin skills                 | `${CODEX_PLUGIN_ROOT}/skills/*/SKILL.md` (read-only) |
 
 The plugin never writes inside itself. Every pipeline file, every code edit performed by an executor, every log entry — all land in the consumer project's working directory.

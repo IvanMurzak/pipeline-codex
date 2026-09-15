@@ -145,9 +145,11 @@ your own bookkeeping; never to decide.
 > context this mode is conserving, and let them ask for it deliberately, after
 > the run.
 
-Call Codex's native `spawn_agent` ONCE with `agent_type: "step-executor"` and
-`fork_turns: "none"`, then wait for that agent with `wait_agent` so its report
-returns before the loop advances. Never start a child and poll an output file.
+Resolve `roles/step-executor.md` relative to this reference file. Call Codex's
+native `spawn_agent` ONCE without an agent type, with `fork_turns: "none"` and a
+message starting `Read <absolute role path> fully before acting.`, then wait
+for that agent with `wait_agent` so its report returns before the loop
+advances. Never start a child and poll an output file.
 Use a task label such as `<pipeline_name> · step <NN>`, where `NN` is your own loop
 counter (`01`, `02`, …) — you do not know the `step_id`, and you are not going
 to look it up.
@@ -240,9 +242,11 @@ handed to you again.
 
 ### `run-improver` — spawn `pipeline-improver`
 
-Call `spawn_agent` with `agent_type: "pipeline-improver"` and
-`fork_turns: "none"`; pass no per-call model because the registered agent pins
-its own model and reasoning effort. Wait with `wait_agent`. The task is the `improvement_brief` you
+Resolve `roles/pipeline-improver.md` relative to this reference file. Call
+`spawn_agent` without an agent type and with `fork_turns: "none"`; begin the
+message with `Read <absolute role path> fully before acting.` Request
+`gpt-5.6-sol` and high effort when supported; otherwise inherit and report the
+unapplied hint. Wait with `wait_agent`. The task is the `improvement_brief` you
 kept from that step's report, verbatim, under one line that hands it the action
 file so it reads its own targets:
 
@@ -266,8 +270,11 @@ The CLI emits these one at a time, in order, never two at once — so **count yo
 own dispatches since the improver**: the first is brief 1, the second brief 2.
 You do not need to open the action file to learn `number`.
 
-Call `spawn_agent` with `agent_type: "pipeline-script-creator"`,
-`fork_turns: "none"`, no per-call model, and that brief verbatim under the same one-line preamble
+Resolve `roles/pipeline-script-creator.md` relative to this reference file. Call
+`spawn_agent` without an agent type and with `fork_turns: "none"`; begin the
+message with `Read <absolute role path> fully before acting.` Request
+`gpt-5.6-sol` and high effort when supported; otherwise inherit and report the
+unapplied hint. Pass that brief verbatim under the same one-line preamble
 (`Your action file is <brief_file>. Read it for iteration_path, number, of.`).
 Wait with `wait_agent` for the `Script Creator Final Report`, then record
 `--record '{"kind":"script","outcome":"created|updated|converted|repaired|refused","script_path":"<abs-or-null>"}'`
@@ -275,7 +282,7 @@ Wait with `wait_agent` for the `Script Creator Final Report`, then record
 
 ### `retrospective` — run the Tier-2 retrospective
 
-Read `${CODEX_PLUGIN_ROOT}/agents/pipeline-manager.toml` and follow its
+Read `roles/pipeline-manager.md` relative to this reference file and follow its
 **"End-of-run Retrospective"** section as written — you are performing the
 manager's role for this run, and duplicating that contract here would let the
 two drift. Two adjustments, and only two:

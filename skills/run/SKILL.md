@@ -136,7 +136,12 @@ The writer pops `run_id`, `parent_run_id`, and `session_id` out of the kv args a
 
    ### 5.1 Spawn the `pipeline-manager`
 
-   Call Codex's native `spawn_agent`, requesting the registered custom agent whose `name` is `pipeline-manager`, with `fork_turns: "none"`. Hand it the prompt below as its task message:
+   Resolve `references/roles/pipeline-manager.md` relative to this installed
+   SKILL.md. Call Codex's native `spawn_agent` without an agent type, with a task
+   name such as `pipeline_manager_<run_id_sanitized>` (replace hyphens in the
+   UUID with underscores) and `fork_turns: "none"`. Start the
+   message with `Read <absolute role path> fully before acting; it defines your
+   protocol.`, then hand it the prompt below:
 
    ```
    Orchestrate this pipeline run. Drive the chain to completion via fresh
@@ -249,7 +254,17 @@ Brief fields: `parent_task_repo`, `parent_task_issue`, `parent_branch`, `parent_
 
 3. **Resolve `blocker_pipeline_first_iteration`.** If it is `REQUIRES_DESIGN`, stop this blocker flow and report the brief to the user with the exact next action: `$pipeline:design <blocker_design_prompt>`. A skill is not a custom agent and cannot be selected through `spawn_agent`; after the user creates the repeatable blocker pipeline, resume from its first iteration.
 
-4. **Spawn the child pipeline run** — call `spawn_agent`, again requesting the registered `pipeline-manager` with `fork_turns: "none"`, pointed at `blocker_pipeline_first_iteration`, with its own `run_id=<child_run_id>` and `parent_run_id=<id>` (pass `parent_run_id` literally on the child's events for UI nesting). Its prompt includes the brief fields plus the newly-minted `blocker_issue_number` / `blocker_issue_url`, and the instruction that the child's PR body MUST include `Closes #<blocker_issue_number>`. Provision the child's worktree/branch from `<blocker_worktree_source>`; the child never writes into the parent's worktree. You wait for the child's PR, not for the child subagent call to return.
+4. **Spawn the child pipeline run** — call `spawn_agent` without an agent type,
+   again passing the absolute `references/roles/pipeline-manager.md` path with
+   `fork_turns: "none"`, pointed at `blocker_pipeline_first_iteration`, with its
+   own `run_id=<child_run_id>` and `parent_run_id=<id>` (pass `parent_run_id`
+   literally on the child's events for UI nesting). Its prompt includes the
+   brief fields plus the newly-minted `blocker_issue_number` /
+   `blocker_issue_url`, and the instruction that the child's PR body MUST
+   include `Closes #<blocker_issue_number>`. Provision the child's
+   worktree/branch from `<blocker_worktree_source>`; the child never writes into
+   the parent's worktree. You wait for the child's PR, not for the child
+   subagent call to return.
 
 5. **Poll-wait loop.** Every `poll_interval_minutes`, search for a PR closing the blocker issue and emit `blocker.polling run_id=<id> blocker_issue_url=<url> pr_state=<OPEN|MERGED|CLOSED|none>`:
 
